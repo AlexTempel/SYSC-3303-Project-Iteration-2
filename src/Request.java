@@ -1,17 +1,23 @@
 import java.net.DatagramPacket;
 
 public class Request {
+    private final int requestID;
     private final int startingFloor;
     private final int destinationFloor;
     private boolean finished;
 
-    Request(int startingFloor, int destinationFloor) throws IllegalArgumentException {
+    Request(int requestID, int startingFloor, int destinationFloor) throws IllegalArgumentException {
+        this.requestID = requestID;
         finished = false;
         if (startingFloor == destinationFloor) {
             throw new IllegalArgumentException("starting floor can't be equal to destination floor");
         }
         this.startingFloor = startingFloor;
         this.destinationFloor = destinationFloor;
+    }
+
+    public int getRequestID() {
+        return requestID;
     }
 
     public int getStartingFloor() {
@@ -43,8 +49,8 @@ public class Request {
      * @param packet the packet to be parsed into a Request
      * @return Request according to the data in the packet
      */
-    public static Request parsePacket(DatagramPacket packet) {
-        return new Request(1, 2); //Temporary body
+    public static Request parsePacket(DatagramPacket packet) throws IllegalArgumentException {
+        return new Request(1,1, 2); //Temporary body
     }
 
     /**
@@ -52,7 +58,7 @@ public class Request {
      * @param message the string to be parsed into a Request
      * @return Request according to the data in the string
      */
-    public static Request parseString(String message) {
-        return new Request(1, 2); //Temporary body
+    public static Request parseString(String message) throws IllegalArgumentException {
+        return new Request(1, 1, 2); //Temporary body
     }
 }
