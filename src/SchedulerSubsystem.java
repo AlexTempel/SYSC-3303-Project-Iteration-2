@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class SchedulerSubsystem implements Runnable {
@@ -62,6 +63,21 @@ public class SchedulerSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Method to send a request to an elevator
+     * @param request Request to be sent to the elevator
+     * @param elevator Elevator to send request to
+     * @throws IOException If there is an error sending the packet
+     */
+    public void sendRequestToElevator(Request request, ElevatorSchedulerData elevator) throws IOException {
+        String message = request.convertToPacketMessage();
+        DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
+
+        socket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
+        socket.send(sendPacket);
+        socket.disconnect();
+    }
+
     public void run() {
         System.out.println("Scheduler Starting");
 
@@ -69,7 +85,7 @@ public class SchedulerSubsystem implements Runnable {
         while (true) {
             try {
                 currentRequest = getRequestFromInternet();
-            } catch (IOException e) {
+            } catch (IOException e) { //If there's an error getting a request from the internet loop back again
                 continue;
             }
             dealWithNewRequest(currentRequest);
