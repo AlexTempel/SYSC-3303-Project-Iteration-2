@@ -2,21 +2,20 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 
 public class ElevatorSubsystem implements Runnable {
-    private int current_floor;
     private final int elevator_id;
-    private ElevatorDoors doors;
+    private final ElevatorDoors doors;
     private final DatagramSocket socket;
+    private int current_floor;
 
     /**
      * Contruct the ElevatorSubsystem Object
-     *
      * @param id integer identifier of the elevator, also the recieve port
      */
     public ElevatorSubsystem(int id) throws SocketException {
         this.elevator_id = id;
-        current_floor = 1; //start the Elevator at the ground floor
-        doors = new ElevatorDoors();
+        this.doors = new ElevatorDoors();
         this.socket = new DatagramSocket(id);
+        this.current_floor = 1; //start the Elevator at the ground floor
 
     }
 
@@ -26,16 +25,25 @@ public class ElevatorSubsystem implements Runnable {
             // Obtain formatted request data
             Request myRequest = getRequestData();
             handleRequest(myRequest);
+            // Send completed request back to scheduler
+            sendConfirmation(myRequest);
         }
     }
+
+    //Temp class, needs to:
+    // - Create a UDP packet from the "confirmation" param
+    // - Send packet to the scheduler's socket
+    public void sendConfirmation(Request confirmation){
+
+    }
+
     // This is a temporary class
     //The final implementation should:
-    // - Collect UDP packet from the socket
+    // - Collect UDP packet from the socket (use wait)
     // - Parse and separate the data by ',' delimiter
     // - Create and return a Request type object
     public Request getRequestData(){
-        Request currentRequest = new Request(0,0);
-        return currentRequest;
+        return new Request(0,0);
     }
 
     public void moveElevator(int destination) {
@@ -63,11 +71,14 @@ public class ElevatorSubsystem implements Runnable {
         if (startingFloor != current_floor) {
             moveElevator(startingFloor);
         }
-        // TODO ADD DOOR LOGIC
+        // Open Elevator Doors
+        doors.cycleDoors();
 
         // Move to destination floor
         moveElevator(endingFloor);
+        doors.cycleDoors();
+
+        // Mark complete
         currentReq.complete();
-        currentReq = null;
     }
 }
