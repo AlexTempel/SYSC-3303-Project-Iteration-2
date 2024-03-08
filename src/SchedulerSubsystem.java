@@ -76,6 +76,8 @@ public class SchedulerSubsystem implements Runnable {
         socket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
         socket.send(sendPacket);
         socket.disconnect();
+
+        elevator.setInUse(true);
     }
 
     public void run() {
