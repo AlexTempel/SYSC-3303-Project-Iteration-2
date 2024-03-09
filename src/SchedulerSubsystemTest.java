@@ -27,9 +27,11 @@ class SchedulerSubsystemTest {
             Request req = new Request(1,4,10);
             SchedulerSubsystem testScheduler = new SchedulerSubsystem(1);
 
-            assertFalse(testScheduler.getElevatorList().getFirst().getInUse());
+            assertFalse("no current elevator should be running",
+                    testScheduler.getElevatorList().getFirst().getInUse());
             testScheduler.selectElevator(req);
-            assertTrue(testScheduler.getElevatorList().getFirst().getInUse());
+            assertTrue("first elevator should be running",
+                    testScheduler.getElevatorList().getFirst().getInUse());
 
         } catch (SocketException e) {
             throw new RuntimeException(e);
