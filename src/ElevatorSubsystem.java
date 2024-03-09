@@ -1,11 +1,17 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 
 public class ElevatorSubsystem implements Runnable {
     private final int elevator_id;
     private final ElevatorDoors doors;
     private final DatagramSocket socket;
     private int current_floor;
+    private InetAddress schedulerAddress = null;
+    private int schedulerPort = -1;
 
     /**
      * Contruct the ElevatorSubsystem Object
@@ -23,17 +29,24 @@ public class ElevatorSubsystem implements Runnable {
         System.out.println("Starting Elevator");
         while (true) {
             // Obtain formatted request data
-            Request myRequest = getRequestData();
-            handleRequest(myRequest);
-            // Send completed request back to scheduler
-            sendConfirmation(myRequest);
+            try {
+                Request myRequest = getRequestData();
+                handleRequest(myRequest);
+                // Send completed request back to scheduler
+                sendConfirmation(myRequest);
+            }catch(IOException e){}
         }
     }
 
     //Temp class, needs to:
     // - Create a UDP packet from the "confirmation" param
     // - Send packet to the scheduler's socket
-    public void sendConfirmation(Request confirmation){
+    public void sendConfirmation(Request confirmation) throws IOException {
+        String message = confirmation.convertToPacketMessage();
+        DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
+        socket.connect(schedulerAddress, schedulerPort);
+        socket.send(sendPacket);
+        socket.disconnect();
 
     }
 
@@ -42,8 +55,16 @@ public class ElevatorSubsystem implements Runnable {
     // - Collect UDP packet from the socket (use wait)
     // - Parse and separate the data by ',' delimiter
     // - Create and return a Request type object
-    public Request getRequestData(){
-        return new Request(0,0);
+    public Request getRequestData() throws IOException {
+        DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
+        socket.receive(receivePacket);
+
+        if(schedulerAddress == null) {
+            schedulerAddress = receivePacket.getAddress();
+            schedulerPort = receivePacket.getPort();
+        }
+
+        return Request.parsePacket(receivePacket);
     }
 
     public void moveElevator(int destination) {
