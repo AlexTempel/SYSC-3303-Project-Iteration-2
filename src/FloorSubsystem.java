@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.net.DatagramPacket;
+import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.time.LocalTime;
@@ -8,7 +10,8 @@ public class FloorSubsystem implements Runnable {
 
     private ArrayList<Floor> listOfFloors;
     private ArrayList<TimedRequest> listOfRequests;
-    private Request currRequest;
+
+
 
     FloorSubsystem(int numberOfFloors, Request[] buffer) {
         listOfFloors = new ArrayList<>();
@@ -16,7 +19,7 @@ public class FloorSubsystem implements Runnable {
             listOfFloors.add(new Floor(i+1));
         }
         listOfRequests = readCSV("Input.csv");
-        currRequest = buffer;
+
     }
 
     /**
@@ -71,22 +74,21 @@ public class FloorSubsystem implements Runnable {
      * Assigns the next current request to send to the scheduler and notifies when complete
      */
     private void sendToScheduler() {
-        if (currRequest == null) {
-            Request temp_request = getCurrentRequest();
+        Request temp_request = getCurrentRequest();
+        String message = temp_request.convertToPacketMessage();
+        DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
-            if (temp_request != null) {
-                currRequest = temp_request;
-            }
-            String message = temp_request.convertToPacketMessage();
-        }
+        socket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
+        socket.send(sendPacket);
+        socket.disconnect();
 
-        System.out.println("Sent to Scheduler");
     }
 
     public void run() {
         System.out.println("Floor Subsystem Starting");
         while (true) {
             sendToScheduler();
+            System.out.println("Sent to Scheduler");
         }
     }
 }
