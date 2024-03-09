@@ -74,6 +74,9 @@ class SchedulerSubsystemTest {
             testPending.dealWithNewRequest(req1);
 
             assertFalse(testPending.getPendingRequestList().isEmpty());
+            assertEquals(testPending.getPendingRequestList().size(), 4);
+            checkPending();
+            assertEquals(testPending.getPendingRequestList().size(), 3);
 
         } catch (SocketException e) {
             throw new RuntimeException(e);
