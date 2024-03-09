@@ -112,4 +112,8 @@ public class ElevatorSubsystem implements Runnable {
         // Mark complete
         currentReq.complete();
     }
+
+    public int getCurrentFloor(){
+        return current_floor;
+    }
 }
