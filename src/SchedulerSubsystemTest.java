@@ -3,6 +3,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.internal.runners.statements.Fail;
 import org.junit.jupiter.api.Test;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -10,8 +12,21 @@ import java.util.ArrayList;
 class SchedulerSubsystemTest {
 
     @org.junit.jupiter.api.Test
-    void getRequestFromInternet() {
+    void getRequestFromInternet() throws Exception {
+        ArrayList<ElevatorSchedulerData> elevatorList = new ArrayList<>();
+        SchedulerSubsystem testSystem = new SchedulerSubsystem(10000, elevatorList);
 
+        Request dummyRequest = new Request(1, 1, 2);
+
+        DatagramSocket dummySocket = new DatagramSocket(10001);
+        DatagramPacket dummyPacket = new DatagramPacket(dummyRequest.convertToPacketMessage().getBytes(), dummyRequest.convertToPacketMessage().getBytes().length);
+        dummySocket.connect(InetAddress.getLoopbackAddress(), 10000);
+        dummySocket.send(dummyPacket);
+        dummySocket.disconnect();
+
+        RequestWrapper result = testSystem.getRequestFromInternet();
+
+        assertEquals(dummyRequest, result.getRequest());
     }
 
     @org.junit.jupiter.api.Test
