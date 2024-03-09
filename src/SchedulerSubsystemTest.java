@@ -80,7 +80,7 @@ class SchedulerSubsystemTest {
 
             assertFalse(testPending.getPendingRequestList().isEmpty());
             assertEquals(testPending.getPendingRequestList().size(), 4);
-            checkPending();
+            testPending.checkPending();
             assertEquals(testPending.getPendingRequestList().size(), 3);
 
         } catch (SocketException e) {

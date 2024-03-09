@@ -151,4 +151,7 @@ public class SchedulerSubsystem implements Runnable {
     public ArrayList<Request> getOutstandingRequestList() {
         return outstandingRequestList;
     }
+    public ArrayList<Request> getPendingRequestList() {
+        return pendingRequestList;
+    }
 }
