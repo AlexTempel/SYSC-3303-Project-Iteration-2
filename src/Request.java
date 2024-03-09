@@ -40,27 +40,6 @@ public class Request {
      * Converts this Request into a string that can be put into a UDP packet
      * @return String that can be put into a UDP packet
      */
-    public static String byteToHex(byte[] b){
-        final StringBuilder builder = new StringBuilder();
-        for(byte e : b){
-            builder.append(String.format("%02x,",e));
-        }
-        return builder.toString();
-    }
-    public static byte[] makeReadable(byte[] b){
-        byte[] printable = new byte[b.length];
-        // this loop will make it so that the data sent in the packet is
-        // printable in the UTF-8 format as characters from 0-9 do not
-        // show unless shifted up by 48 to display their ascii equivalents
-        for(int i = 0;i<b.length;i++){
-            if(b[i]<10) {
-                printable[i] = (byte) (b[i] + 48);
-            } else {
-                printable[i] = b[i];
-            }
-        }
-        return printable;
-    }
     public String convertToPacketMessage() {
         int f;
         if(this.isFinished()){
