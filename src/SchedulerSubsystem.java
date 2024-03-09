@@ -4,15 +4,19 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.lang.Math;
 
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
     private final ArrayList<ElevatorSchedulerData> elevatorList;
+    private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
+
 
     SchedulerSubsystem(int port) throws SocketException {
         elevatorList = new ArrayList<>();
         outstandingRequestList = new ArrayList<>();
+        pendingRequestList = new ArrayList<>();
 
         socket = new DatagramSocket(port);
     }
@@ -60,6 +64,7 @@ public class SchedulerSubsystem implements Runnable {
             }
         } else { //If it isn't a complete request add it to the list of outstanding requests
             outstandingRequestList.add(request.getRequest());
+            pendingRequestList.add(request.getRequest());
         }
     }
 
@@ -91,7 +96,44 @@ public class SchedulerSubsystem implements Runnable {
                 continue;
             }
             dealWithNewRequest(currentRequest);
+            checkPending();
+        }
+    }
 
+    public void checkPending() {
+        selectElevator(pendingRequestList.getFirst());
+    }
+
+    /**
+     * first checks for free elevator, if not exit, then if it has a free
+     * Selects the closeted elevator to the requested floor, and removes the
+     * request from pending
+     * @param request
+     */
+    public void selectElevator(Request request) {
+        int x = 0; // used for deciding if elevators are all in use
+        ElevatorSchedulerData eli = elevatorList.get(0);
+        for (int i = 0; i < 4; i++) { // checks each elevator
+            if (elevatorList.get(i).getInUse()){
+                x++; // if an elevator is in use adds 1 to x
+            }
+            else { // checks and sets the current closeted floor to the request
+                if (Math.abs(eli.getCurrentFloor() - request.getStartingFloor()) >
+                        Math.abs(elevatorList.get(i).getCurrentFloor()
+                                - request.getStartingFloor())) {
+                    eli = elevatorList.get(i);
+                }
+            }
+        }
+        if (x == 4) {
+            // elevator are all in use so does nothing
+        }
+        else {
+            try {
+                sendRequestToElevator(request, eli); // request elevator to be sent
+                pendingRequestList.remove(0); // removes from pendinglist
+            } catch (IOException e) {
+            }
         }
     }
 }
