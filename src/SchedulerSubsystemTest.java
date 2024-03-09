@@ -20,9 +20,21 @@ class SchedulerSubsystemTest {
             ArrayList<ElevatorSchedulerData> elevatorList = new ArrayList<>();
             elevatorList.add(new ElevatorSchedulerData(1, InetAddress.getLoopbackAddress()));
             elevatorList.add(new ElevatorSchedulerData(2, InetAddress.getLoopbackAddress()));
-            SchedulerSubsystem testSystem = new SchedulerSubsystem(1, elevatorList);
+            ElevatorSchedulerData elevator3 = new ElevatorSchedulerData(3, InetAddress.getLoopbackAddress());
+            elevator3.setInUse(true);
+
+
             Request r = new Request(1, 1, 2);
-            ElevatorSchedulerData el = new ElevatorSchedulerData(1, InetAddress.getLoopbackAddress());
+            ArrayList<Request> outstandingRequests = new ArrayList<>();
+            outstandingRequests.add(r);
+
+            SchedulerSubsystem testSystem = new SchedulerSubsystem(1, elevatorList, outstandingRequests);
+
+            ElevatorSchedulerData elevatorTest = new ElevatorSchedulerData(3, InetAddress.getLoopbackAddress());
+            RequestWrapper rw = new RequestWrapper(r, elevatorTest);
+
+
+            testSystem.dealWithNewRequest(rw);
         } catch (Exception e) {
             fail("Exception in code");
         }
