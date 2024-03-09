@@ -31,9 +31,9 @@ public class FloorSubsystem implements Runnable {
     }
 
     /**
-     * Reads the input csv file and parses into our desired format for request calls
+     * Reads the input csv file and parses into our desired format for timed request calls
      * @param csvName input csv file
-     * @return the list of requests in the desired format
+     * @return toReturn the list of timed requests in the desired format
      */
     public static ArrayList<TimedRequest> readCSV(String csvName) {
         ArrayList<TimedRequest> toReturn = new ArrayList<TimedRequest>();
@@ -63,7 +63,7 @@ public class FloorSubsystem implements Runnable {
      * request from the list and return the request
      * @return reqToSend the request from the input file that has the same time as the current time
      */
-    private Request getCurrentRequest(){
+    public Request getCurrentRequest(){
         for (TimedRequest r : listOfRequests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
                 listOfRequests.remove(r);
@@ -79,9 +79,10 @@ public class FloorSubsystem implements Runnable {
 
     /**
      * Provides the functionality for the Floor Subsystem
-     * Assigns the next current request to send to the scheduler and notifies when complete
+     * Gets the request at the current time, convert it to a message string, then into a datagram packet and sends it
+     * to the scheduler.
      */
-    private void sendToScheduler() throws IOException {
+    public void sendToScheduler() throws IOException {
         Request temp_request = getCurrentRequest();
         String message = temp_request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
@@ -89,7 +90,6 @@ public class FloorSubsystem implements Runnable {
         floorSocket.connect(shedIpAddress, schedulerPort);
         floorSocket.send(sendPacket);
         floorSocket.disconnect();
-
     }
 
     public void run() {
