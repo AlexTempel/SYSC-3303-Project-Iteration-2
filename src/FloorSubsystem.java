@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -14,13 +15,13 @@ public class FloorSubsystem implements Runnable {
     private  ArrayList<Floor> listOfFloors;
     private  ArrayList<TimedRequest> listOfRequests;
     private final DatagramSocket floorSocket;
-    private final DatagramSocket schedSocket;
+    private final int schedulerPort;
     private final InetAddress shedIpAddress;
 
     FloorSubsystem(int floorPort, int schedPort, int numberOfFloors, InetAddress shedIpAddress) throws SocketException {
         this.shedIpAddress = shedIpAddress;
         floorSocket = new DatagramSocket(floorPort);
-        schedSocket = new DatagramSocket(schedPort);
+        this.schedulerPort = schedPort;
         listOfFloors = new ArrayList<>();
         for (int i = 0; i < numberOfFloors; i++) {
             listOfFloors.add(new Floor(i+1));
@@ -80,21 +81,25 @@ public class FloorSubsystem implements Runnable {
      * Provides the functionality for the Floor Subsystem
      * Assigns the next current request to send to the scheduler and notifies when complete
      */
-    private void sendToScheduler() {
+    private void sendToScheduler() throws IOException {
         Request temp_request = getCurrentRequest();
         String message = temp_request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
-        floorSocket.connect(shedIpAddress, schedSocket);
-        socket.send(sendPacket);
-        socket.disconnect();
+        floorSocket.connect(shedIpAddress, schedulerPort);
+        floorSocket.send(sendPacket);
+        floorSocket.disconnect();
 
     }
 
     public void run() {
         System.out.println("Floor Subsystem Starting");
         while (true) {
-            sendToScheduler();
+            try {
+                sendToScheduler();
+            } catch (IOException e) {
+                continue;
+            }
             System.out.println("Sent to Scheduler");
         }
     }
