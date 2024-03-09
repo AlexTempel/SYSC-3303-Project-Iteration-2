@@ -40,6 +40,15 @@ class SchedulerSubsystemTest {
             assertTrue(testSystem.getOutstandingRequestList().isEmpty());
             assertFalse(elevator3.getInUse());
             assertEquals(2, elevator3.getCurrentFloor());
+
+            int numOutstanding = testSystem.getOutstandingRequestList().size();
+
+            testSystem.dealWithNewRequest(
+                    new RequestWrapper(
+                            new Request(5,5,10),
+                            new ElevatorSchedulerData(1, InetAddress.getLoopbackAddress())));
+
+            assertEquals(numOutstanding + 1, testSystem.getOutstandingRequestList().size());
         } catch (Exception e) {
             fail("Exception in code");
         }
