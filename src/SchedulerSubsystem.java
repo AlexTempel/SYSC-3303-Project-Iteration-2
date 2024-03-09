@@ -118,9 +118,9 @@ public class SchedulerSubsystem implements Runnable {
                 x++; // if an elevator is in use adds 1 to x
             }
             else { // checks and sets the current closeted floor to the request
-                if (Math.abs(eli.getCurrentFloor() - request.getDestinationFloor()) >
+                if (Math.abs(eli.getCurrentFloor() - request.getStartingFloor()) >
                         Math.abs(elevatorList.get(i).getCurrentFloor()
-                                - request.getDestinationFloor())) {
+                                - request.getStartingFloor())) {
                     eli = elevatorList.get(i);
                 }
             }
