@@ -1,12 +1,23 @@
+import java.net.DatagramPacket;
+
 public class Request {
+    private final int requestID;
     private final int startingFloor;
     private final int destinationFloor;
     private boolean finished;
 
-    Request(int startingFloor, int destinationFloor) {
+    Request(int requestID, int startingFloor, int destinationFloor) throws IllegalArgumentException {
+        this.requestID = requestID;
         finished = false;
+        if (startingFloor == destinationFloor) {
+            throw new IllegalArgumentException("starting floor can't be equal to destination floor");
+        }
         this.startingFloor = startingFloor;
         this.destinationFloor = destinationFloor;
+    }
+
+    public int getRequestID() {
+        return requestID;
     }
 
     public int getStartingFloor() {
@@ -21,5 +32,33 @@ public class Request {
         this.finished = true;
     }
 
-    //Will need a method to convert to string for UDP packets
+    public boolean isFinished() {
+        return finished;
+    }
+
+    /**
+     * Converts this Request into a string that can be put into a UDP packet
+     * @return String that can be put into a UDP packet
+     */
+    public String convertToPacketMessage() {
+        return ""; //Temporary body
+    }
+
+    /**
+     * Returns a Request object from a UDP packet
+     * @param packet the packet to be parsed into a Request
+     * @return Request according to the data in the packet
+     */
+    public static Request parsePacket(DatagramPacket packet) throws IllegalArgumentException {
+        return new Request(1,1, 2); //Temporary body
+    }
+
+    /**
+     * Returns a Request object from a string, following the proper formatting
+     * @param message the string to be parsed into a Request
+     * @return Request according to the data in the string
+     */
+    public static Request parseString(String message) throws IllegalArgumentException {
+        return new Request(1, 1, 2); //Temporary body
+    }
 }
