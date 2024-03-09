@@ -147,5 +147,8 @@ public class SchedulerSubsystem implements Runnable {
     public ArrayList<ElevatorSchedulerData> getElevatorList(){
         return elevatorList;
     }
-    public ArrayList<Request> getPendingRequestList() {return pendingRequestList;}
+
+    public ArrayList<Request> getOutstandingRequestList() {
+        return outstandingRequestList;
+    }
 }
