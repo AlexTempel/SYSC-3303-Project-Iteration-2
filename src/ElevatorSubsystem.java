@@ -25,6 +25,9 @@ public class ElevatorSubsystem implements Runnable {
 
     }
 
+    /**
+     * Attempt to complete the request
+     */
     public void run() {
         System.out.println("Starting Elevator");
         while (true) {
@@ -38,9 +41,11 @@ public class ElevatorSubsystem implements Runnable {
         }
     }
 
-    //Temp class, needs to:
-    // - Create a UDP packet from the "confirmation" param
-    // - Send packet to the scheduler's socket
+    /**
+     * Converts Request to string, sends packet to Scheduelr
+     * @param confirmation Request with the completed attribute true
+     * @throws IOException
+     */
     public void sendConfirmation(Request confirmation) throws IOException {
         String message = confirmation.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
@@ -50,11 +55,12 @@ public class ElevatorSubsystem implements Runnable {
 
     }
 
-    // This is a temporary class
-    //The final implementation should:
-    // - Collect UDP packet from the socket (use wait)
-    // - Parse and separate the data by ',' delimiter
-    // - Create and return a Request type object
+
+    /**
+     * Get the Request packet from scheduler, return request with the data
+     * @return the Request from the scheduler
+     * @throws IOException
+     */
     public Request getRequestData() throws IOException {
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         socket.receive(receivePacket);
@@ -67,6 +73,10 @@ public class ElevatorSubsystem implements Runnable {
         return Request.parsePacket(receivePacket);
     }
 
+
+    /**
+     * Moves the elevator to the starting floor, then to the destination floor
+     */
     public void moveElevator(int destination) {
         // Check how many floors elevator needs to travel
         int floorDifference = Math.abs(current_floor - destination);
