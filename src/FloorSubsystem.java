@@ -8,7 +8,7 @@ public class FloorSubsystem implements Runnable {
 
     private ArrayList<Floor> listOfFloors;
     private ArrayList<TimedRequest> listOfRequests;
-    private Request[] currRequest;
+    private Request currRequest;
 
     FloorSubsystem(int numberOfFloors, Request[] buffer) {
         listOfFloors = new ArrayList<>();
@@ -37,7 +37,7 @@ public class FloorSubsystem implements Runnable {
                 line = input.readLine();
                 String[] values = line.split(" ");
 
-                Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[2]), False);
+                Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[2]));
 
                 TimedRequest newTimedRequest = new TimedRequest(LocalTime.parse(values[0]), newRequest);
                 toReturn.add(newTimedRequest);
@@ -56,9 +56,7 @@ public class FloorSubsystem implements Runnable {
         for (TimedRequest r : listOfRequests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
                 listOfRequests.remove(r);
-                Request reqToSend = new Request(r.getRequest().getRequestID(),
-                        r.getRequest().getStartingFloor(),
-                        r.getRequest().getDestinationFloor(), False);
+                Request reqToSend = r.getRequest();
                 return reqToSend;
             }
         }
@@ -72,16 +70,17 @@ public class FloorSubsystem implements Runnable {
      * Provides the functionality for the Floor Subsystem
      * Assigns the next current request to send to the scheduler and notifies when complete
      */
-    private synchronized void sendToScheduler() {
-        if (currRequest[0] == null) {
+    private void sendToScheduler() {
+        if (currRequest == null) {
             Request temp_request = getCurrentRequest();
 
             if (temp_request != null) {
-                currRequest[0] = temp_request;
-                System.out.println("Sent to Scheduler");
+                currRequest = temp_request;
             }
+            String message = temp_request.convertToPacketMessage();
         }
 
+        System.out.println("Sent to Scheduler");
     }
 
     public void run() {
