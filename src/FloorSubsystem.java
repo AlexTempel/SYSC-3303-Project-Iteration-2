@@ -7,7 +7,7 @@ import java.time.LocalTime;
 public class FloorSubsystem implements Runnable {
 
     private ArrayList<Floor> listOfFloors;
-    private ArrayList<Request> listOfRequests;
+    private ArrayList<TimedRequest> listOfRequests;
     private Request[] currRequest;
 
     FloorSubsystem(int numberOfFloors, Request[] buffer) {
@@ -24,22 +24,23 @@ public class FloorSubsystem implements Runnable {
      * @param csvName input csv file
      * @return the list of requests in the desired format
      */
-    public static ArrayList<Request> readCSV(String csvName) {
-        //SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.S");
-        ArrayList<Request> toReturn = new ArrayList<Request>();
+    public static ArrayList<TimedRequest> readCSV(String csvName) {
+        ArrayList<TimedRequest> toReturn = new ArrayList<TimedRequest>();
         try {
             FileReader file = new FileReader(csvName);
             BufferedReader input = new BufferedReader(file);
             String line = input.readLine();
+            int counterID = 0;
 
             while(line != null){
+                counterID = counterID + 1;
                 line = input.readLine();
                 String[] values = line.split(" ");
-                Request newRequest = new Request(LocalTime.parse(values[0]),
-                        Integer.parseInt(values[1]),
-                        values[2],
-                        Integer.parseInt(values[3]));
-                toReturn.add(newRequest);
+
+                Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[2]), False);
+
+                TimedRequest newTimedRequest = new TimedRequest(LocalTime.parse(values[0]), newRequest);
+                toReturn.add(newTimedRequest);
             }
             input.close();
         } catch(Exception e) { e.getStackTrace(); }
@@ -52,10 +53,13 @@ public class FloorSubsystem implements Runnable {
      * @return r the request from the input file that has the same time as the current time
      */
     private Request getCurrentRequest(){
-        for (Request r : listOfRequests) {
+        for (TimedRequest r : listOfRequests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
                 listOfRequests.remove(r);
-                return r;
+                Request reqToSend = new Request(r.getRequest().getRequestID(),
+                        r.getRequest().getStartingFloor(),
+                        r.getRequest().getDestinationFloor(), False);
+                return reqToSend;
             }
         }
         try { //Wait half a second and check again
@@ -68,23 +72,22 @@ public class FloorSubsystem implements Runnable {
      * Provides the functionality for the Floor Subsystem
      * Assigns the next current request to send to the scheduler and notifies when complete
      */
-    private synchronized void fulfillBuffer() {
+    private synchronized void sendToScheduler() {
         if (currRequest[0] == null) {
             Request temp_request = getCurrentRequest();
 
             if (temp_request != null) {
                 currRequest[0] = temp_request;
                 System.out.println("Sent to Scheduler");
-                System.out.println("Sent: " + temp_request.toString());
             }
         }
-        notifyAll();
+
     }
 
     public void run() {
         System.out.println("Floor Subsystem Starting");
         while (true) {
-            fulfillBuffer();
+            sendToScheduler();
         }
     }
 }
