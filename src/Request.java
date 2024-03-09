@@ -70,7 +70,7 @@ public class Request {
         String[] pm = message.split(",");// message format will be requestID,startingFloor,destinationFloor,f
         Request ret = new Request(Integer.valueOf(pm[0]),Integer.valueOf(pm[1]), Integer.valueOf(pm[2]));
         char comp = pm[3].charAt(0); // Separate "finished" indicator bit
-        if(Integer.valueOf(comp) == 1){
+        if(Character.getNumericValue(temp) == 1){
             ret.complete();
         }
         return ret;
