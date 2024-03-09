@@ -63,7 +63,6 @@ public class SchedulerSubsystem implements Runnable {
                 }
             }
         } else { //If it isn't a complete request add it to the list of outstanding requests
-            selectElevator(request.getRequest());
             outstandingRequestList.add(request.getRequest());
             pendingRequestList.add(request.getRequest());
         }
@@ -106,8 +105,10 @@ public class SchedulerSubsystem implements Runnable {
     }
 
     /**
-     * Selects the closeted elevator to the requested floor
-     *
+     * first checks for free elevator, if not exit, then if it has a free
+     * Selects the closeted elevator to the requested floor, and removes the
+     * request from pending
+     * @param request
      */
     public void selectElevator(Request request) {
         int x = 0;
@@ -129,6 +130,7 @@ public class SchedulerSubsystem implements Runnable {
         else {
             try {
                 sendRequestToElevator(request, eli);
+                pendingRequestList.remove(0);
             } catch (IOException e) {
             }
         }
