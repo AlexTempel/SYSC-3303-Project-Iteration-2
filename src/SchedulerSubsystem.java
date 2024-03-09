@@ -111,26 +111,27 @@ public class SchedulerSubsystem implements Runnable {
      * @param request
      */
     public void selectElevator(Request request) {
-        int x = 0;
+        int x = 0; // used for deciding if elevators are all in use
         ElevatorSchedulerData eli = elevatorList.get(0);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) { // checks each elevator
             if (elevatorList.get(i).getInUse()){
-                x++;
+                x++; // if an elevator is in use adds 1 to x
             }
-            else {
+            else { // checks and sets the current closeted floor to the request
                 if (Math.abs(eli.getCurrentFloor() - request.getDestinationFloor()) >
-                        Math.abs(elevatorList.get(i).getCurrentFloor() - request.getDestinationFloor())) {
+                        Math.abs(elevatorList.get(i).getCurrentFloor()
+                                - request.getDestinationFloor())) {
                     eli = elevatorList.get(i);
                 }
             }
         }
         if (x == 4) {
-            // elevator are all in use
+            // elevator are all in use so does nothing
         }
         else {
             try {
-                sendRequestToElevator(request, eli);
-                pendingRequestList.remove(0);
+                sendRequestToElevator(request, eli); // request elevator to be sent
+                pendingRequestList.remove(0); // removes from pendinglist
             } catch (IOException e) {
             }
         }
