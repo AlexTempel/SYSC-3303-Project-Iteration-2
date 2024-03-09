@@ -1,3 +1,4 @@
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +31,8 @@ class SchedulerSubsystemTest {
             assertFalse("no current elevator should be running",
                     testScheduler.getElevatorList().getFirst().getInUse());
             testScheduler.selectElevator(req);
-            assertTrue("first elevator should be running",
-                    testScheduler.getElevatorList().getFirst().getInUse());
+            assertTrue(testScheduler.getElevatorList().getFirst().getInUse(),
+                    "first elevator should be running");
 
         } catch (SocketException e) {
             throw new RuntimeException(e);
