@@ -48,7 +48,7 @@ public class FloorSubsystem implements Runnable {
                 line = input.readLine();
                 String[] values = line.split(" ");
 
-                Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+                Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[3]));
 
                 TimedRequest newTimedRequest = new TimedRequest(LocalTime.parse(values[0]), newRequest);
                 toReturn.add(newTimedRequest);
