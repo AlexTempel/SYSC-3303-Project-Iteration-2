@@ -112,7 +112,7 @@ public class SchedulerSubsystem implements Runnable {
      */
     public void selectElevator(Request request) {
         int x = 0; // used for deciding if elevators are all in use
-        ElevatorSchedulerData eli = elevatorList.get(0);
+        ElevatorSchedulerData eli = elevatorList.getFirst();
         for (int i = 0; i < 4; i++) { // checks each elevator
             if (elevatorList.get(i).getInUse()){
                 x++; // if an elevator is in use adds 1 to x

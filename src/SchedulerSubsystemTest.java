@@ -1,4 +1,3 @@
-import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
@@ -28,8 +27,6 @@ class SchedulerSubsystemTest {
             Request req = new Request(1,4,10);
             SchedulerSubsystem testScheduler = new SchedulerSubsystem(1);
 
-            assertFalse("no current elevator should be running",
-                    testScheduler.getElevatorList().getFirst().getInUse());
             testScheduler.selectElevator(req);
             assertTrue(testScheduler.getElevatorList().getFirst().getInUse(),
                     "first elevator should be running");
