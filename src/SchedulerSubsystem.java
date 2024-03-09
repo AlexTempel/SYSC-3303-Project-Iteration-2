@@ -9,6 +9,7 @@ import java.lang.Math;
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
     private final ArrayList<ElevatorSchedulerData> elevatorList;
+    private final ArrayList<Request> pendingRequest;
     private final ArrayList<Request> outstandingRequestList;
 
     SchedulerSubsystem(int port) throws SocketException {
@@ -60,6 +61,7 @@ public class SchedulerSubsystem implements Runnable {
                 }
             }
         } else { //If it isn't a complete request add it to the list of outstanding requests
+            selectElevator(request.getRequest());
             outstandingRequestList.add(request.getRequest());
         }
     }
@@ -98,7 +100,7 @@ public class SchedulerSubsystem implements Runnable {
 
     /**
      * Selects the closeted elevator to the requested floor
-     * @param request
+     *
      */
     public void selectElevator(Request request) {
         ElevatorSchedulerData eli = elevatorList.get(0);
