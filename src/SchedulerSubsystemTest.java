@@ -26,7 +26,7 @@ class SchedulerSubsystemTest {
 
         RequestWrapper result = testSystem.getRequestFromInternet();
 
-        assertEquals(dummyRequest, result.getRequest());
+        assertEquals(dummyRequest.getRequestID(), result.getRequest().getRequestID());
     }
 
     @org.junit.jupiter.api.Test

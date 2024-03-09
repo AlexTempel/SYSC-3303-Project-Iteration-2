@@ -69,7 +69,8 @@ public class Request {
     public static Request parseString(String message) throws IllegalArgumentException {
         String[] pm = message.split(",");// message format will be requestID,startingFloor,destinationFloor,f
         Request ret = new Request(Integer.valueOf(pm[0]),Integer.valueOf(pm[1]), Integer.valueOf(pm[2]));
-        if(Integer.valueOf(pm[3]) == 1){
+        char temp = pm[3].charAt(0);
+        if(Character.getNumericValue(temp) == 1){
             ret.complete();
         }
         return ret;
