@@ -136,4 +136,7 @@ public class SchedulerSubsystem implements Runnable {
             }
         }
     }
+    public ArrayList<ElevatorSchedulerData> getElevatorList(){
+        return elevatorList;
+    }
 }

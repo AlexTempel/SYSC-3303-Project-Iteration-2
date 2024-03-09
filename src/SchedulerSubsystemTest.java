@@ -29,7 +29,7 @@ class SchedulerSubsystemTest {
 
             testScheduler.selectElevator(req);
 
-            assertTrue(testScheduler.get(0).getInUse());
+            assertTrue(testScheduler.getElevatorList().getFirst().getInUse());
 
         } catch (SocketException e) {
             throw new RuntimeException(e);
