@@ -116,4 +116,8 @@ public class ElevatorSubsystem implements Runnable {
     public int getCurrentFloor(){
         return current_floor;
     }
+
+    public void closeSocket(){
+        socket.close();
+    }
 }

@@ -11,6 +11,7 @@ public class ElevatorSubsystemTest {
             ElevatorSubsystem testElevator = new ElevatorSubsystem(1);
             testElevator.moveElevator(2);
             assertEquals(2,testElevator.getCurrentFloor());
+            testElevator.closeSocket();
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
@@ -20,10 +21,11 @@ public class ElevatorSubsystemTest {
     void handleRequest() {
         try {
             Request req = new Request(1,2,10);
-            ElevatorSubsystem testElevator = new ElevatorSubsystem(2);
+            ElevatorSubsystem testElevator = new ElevatorSubsystem(1);
 
             testElevator.handleRequest(req);
             assertEquals(10,testElevator.getCurrentFloor());
+            testElevator.closeSocket();
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
