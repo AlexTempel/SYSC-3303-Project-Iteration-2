@@ -12,7 +12,6 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
 
-    private final ArrayList<Request> pendingRequestList;
 
     SchedulerSubsystem(int port) throws SocketException {
         elevatorList = new ArrayList<>();
