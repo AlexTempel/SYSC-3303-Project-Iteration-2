@@ -4,7 +4,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.lang.math;
+import java.lang.Math;
 
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
