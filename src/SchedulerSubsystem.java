@@ -9,7 +9,7 @@ import java.lang.Math;
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
     private final ArrayList<ElevatorSchedulerData> elevatorList;
-    private final ArrayList<Request> pendingRequest;
+    private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
 
     SchedulerSubsystem(int port) throws SocketException {
@@ -103,17 +103,27 @@ public class SchedulerSubsystem implements Runnable {
      *
      */
     public void selectElevator(Request request) {
+        int x = 0;
         ElevatorSchedulerData eli = elevatorList.get(0);
         for (int i = 0; i < 4; i++) {
-            if (Math.abs(eli.getCurrentFloor() - request.getDestinationFloor()) >
-                    Math.abs(elevatorList.get(i).getCurrentFloor() - request.getDestinationFloor())) {
-                eli = elevatorList.get(i);
+            if (elevatorList.get(i).getInUse()){
+                x++;
+            }
+            else {
+                if (Math.abs(eli.getCurrentFloor() - request.getDestinationFloor()) >
+                        Math.abs(elevatorList.get(i).getCurrentFloor() - request.getDestinationFloor())) {
+                    eli = elevatorList.get(i);
+                }
             }
         }
-        try {
-            sendRequestToElevator(request, eli);
-        } catch (IOException e) {
-
+        if (x == 4) {
+            // elevator are all in use
+        }
+        else {
+            try {
+                sendRequestToElevator(request, eli);
+            } catch (IOException e) {
+            }
         }
     }
 }
