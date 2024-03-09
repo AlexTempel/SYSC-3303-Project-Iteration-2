@@ -34,6 +34,5 @@ class SchedulerSubsystemTest {
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-
     }
 }
