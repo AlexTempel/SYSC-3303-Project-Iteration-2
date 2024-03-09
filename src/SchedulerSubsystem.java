@@ -94,4 +94,22 @@ public class SchedulerSubsystem implements Runnable {
 
         }
     }
+
+    /**
+     * Selects the closeted elevator to the requested floor
+     * @param request
+     */
+    public void selectElevator(Request request) {
+        elevator eli = elevatorList.get(0);
+        for (int i = 0; i < 4; i++) {
+            print("this is the current distance from the requested floor"
+                    + abs(eli.getFloor() - floorNum));
+            if (abs(eli.getFloor() - request.getRequest().getDestinationFloor()) >
+                    abs(elevatorList.get(i).getFloor() - request.getRequest().getDestinationFloor())) {
+                eli = elevatorList.get(i);
+            }
+        }
+        eli.sendRequest();
+    }
+}
 }
