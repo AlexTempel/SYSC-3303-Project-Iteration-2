@@ -35,7 +35,7 @@ public class FloorSubsystem implements Runnable {
      * @param csvName input csv file
      * @return toReturn the list of timed requests in the desired format
      */
-    public static ArrayList<TimedRequest> readCSV(String csvName) {
+    public ArrayList<TimedRequest> readCSV(String csvName) {
         ArrayList<TimedRequest> toReturn = new ArrayList<TimedRequest>();
         try {
             FileReader file = new FileReader(csvName);
@@ -49,7 +49,7 @@ public class FloorSubsystem implements Runnable {
                 String[] values = line.split(" ");
 
                 Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[3]));
-
+                System.out.println(Integer.parseInt(values[1]));
                 TimedRequest newTimedRequest = new TimedRequest(LocalTime.parse(values[0]), newRequest);
                 toReturn.add(newTimedRequest);
             }
