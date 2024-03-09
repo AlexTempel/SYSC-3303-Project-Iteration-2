@@ -21,7 +21,7 @@ class SchedulerSubsystemTest {
     void checkPending() {
     }
 
-    @Test
+    @org.junit.jupiter.api.Test
     void selectElevator() {
         try {
             Request req = new Request(1,4,10);
@@ -29,7 +29,7 @@ class SchedulerSubsystemTest {
 
             testScheduler.selectElevator(req);
 
-            assertTrue(testScheduler.get(0).getInUse);
+            assertTrue(testScheduler.get(0).getInUse());
 
         } catch (SocketException e) {
             throw new RuntimeException(e);
