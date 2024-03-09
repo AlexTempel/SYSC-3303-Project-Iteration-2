@@ -52,7 +52,37 @@ class SchedulerSubsystemTest {
 
     @org.junit.jupiter.api.Test
     void checkPending() {
+        try {
+            Request req = new Request(1,2,12);
+            ArrayList<ElevatorSchedulerData> eleva = new ArrayList<>();
+            ElevatorSchedulerData a = new ElevatorSchedulerData(1121, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData b = new ElevatorSchedulerData(1232, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData c = new ElevatorSchedulerData(1343, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData d = new ElevatorSchedulerData(1454, InetAddress.getLoopbackAddress());
+            eleva.add(a);
+            eleva.add(b);
+            eleva.add(c);
+            eleva.add(d);
 
+            SchedulerSubsystem testPending = new SchedulerSubsystem(34, eleva);
+
+            // send one check if it has one in it
+            assertTrue(testPending.getPendingRequestList().isEmpty());
+
+            RequestWrapper req1 = new RequestWrapper(req, a);
+            testPending.dealWithNewRequest(req1);
+            RequestWrapper req2 = new RequestWrapper(req, b);
+            testPending.dealWithNewRequest(req1);
+            RequestWrapper req3 = new RequestWrapper(req, c);
+            testPending.dealWithNewRequest(req1);
+            RequestWrapper req4 = new RequestWrapper(req, d);
+            testPending.dealWithNewRequest(req1);
+
+            assertFalse(testPending.getPendingRequestList().isEmpty());
+
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @org.junit.jupiter.api.Test
