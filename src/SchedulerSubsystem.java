@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.lang.math;
 
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
@@ -100,16 +101,18 @@ public class SchedulerSubsystem implements Runnable {
      * @param request
      */
     public void selectElevator(Request request) {
-        elevator eli = elevatorList.get(0);
+        ElevatorSchedulerData eli = elevatorList.get(0);
         for (int i = 0; i < 4; i++) {
-            print("this is the current distance from the requested floor"
-                    + abs(eli.getFloor() - floorNum));
-            if (abs(eli.getFloor() - request.getRequest().getDestinationFloor()) >
-                    abs(elevatorList.get(i).getFloor() - request.getRequest().getDestinationFloor())) {
+            if (Math.abs(eli.getCurrentFloor() - request.getRequest().getDestinationFloor()) >
+                    Math.abs(elevatorList.get(i).getCurrentFloor() - request.getRequest().getDestinationFloor())) {
                 eli = elevatorList.get(i);
             }
         }
-        eli.sendRequest();
+        try {
+            sendRequestToElevator(request, eli);
+        } catch (IOException) {
+
+        }
     }
 }
 }
