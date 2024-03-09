@@ -13,8 +13,8 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> outstandingRequestList;
 
 
-    SchedulerSubsystem(int port) throws SocketException {
-        elevatorList = new ArrayList<>();
+    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
+        this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
         pendingRequestList = new ArrayList<>();
 
