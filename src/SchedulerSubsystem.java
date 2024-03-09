@@ -21,6 +21,14 @@ public class SchedulerSubsystem implements Runnable {
         socket = new DatagramSocket(port);
     }
 
+    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
+        this.elevatorList = elevatorList;
+        this.outstandingRequestList = outstandingRequestList;
+        pendingRequestList = new ArrayList<>();
+
+        socket = new DatagramSocket(port);
+    }
+
     /**
      * Gets a packet from the socket and puts its data in a RequestWrapper
      * @return RequestWrapper of the data packet
