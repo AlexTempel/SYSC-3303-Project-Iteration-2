@@ -103,16 +103,15 @@ public class SchedulerSubsystem implements Runnable {
     public void selectElevator(Request request) {
         ElevatorSchedulerData eli = elevatorList.get(0);
         for (int i = 0; i < 4; i++) {
-            if (Math.abs(eli.getCurrentFloor() - request.getRequest().getDestinationFloor()) >
-                    Math.abs(elevatorList.get(i).getCurrentFloor() - request.getRequest().getDestinationFloor())) {
+            if (Math.abs(eli.getCurrentFloor() - request.getDestinationFloor()) >
+                    Math.abs(elevatorList.get(i).getCurrentFloor() - request.getDestinationFloor())) {
                 eli = elevatorList.get(i);
             }
         }
         try {
             sendRequestToElevator(request, eli);
-        } catch (IOException) {
+        } catch (IOException e) {
 
         }
     }
-}
 }
