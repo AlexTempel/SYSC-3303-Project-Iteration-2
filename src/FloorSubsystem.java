@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -11,16 +13,20 @@ public class FloorSubsystem implements Runnable {
 
     private  ArrayList<Floor> listOfFloors;
     private  ArrayList<TimedRequest> listOfRequests;
-    private final DatagramSocket socket;
+    private final DatagramSocket floorSocket;
+    private final DatagramSocket schedSocket;
+    private final InetAddress shedIpAddress;
 
-
-    FloorSubsystem(int port, int numberOfFloors) {
+    FloorSubsystem(int floorPort, int schedPort, int numberOfFloors, InetAddress shedIpAddress) throws SocketException {
+        this.shedIpAddress = shedIpAddress;
+        floorSocket = new DatagramSocket(floorPort);
+        schedSocket = new DatagramSocket(schedPort);
         listOfFloors = new ArrayList<>();
         for (int i = 0; i < numberOfFloors; i++) {
             listOfFloors.add(new Floor(i+1));
         }
         listOfRequests = readCSV("Input.csv");
-        socket = new DatagramSocket(port);
+
     }
 
     /**
@@ -54,7 +60,7 @@ public class FloorSubsystem implements Runnable {
     /**
      * Loops through the listOfRequests and checks if they are scheduled for the current time, if so remove the
      * request from the list and return the request
-     * @return r the request from the input file that has the same time as the current time
+     * @return reqToSend the request from the input file that has the same time as the current time
      */
     private Request getCurrentRequest(){
         for (TimedRequest r : listOfRequests) {
@@ -79,7 +85,7 @@ public class FloorSubsystem implements Runnable {
         String message = temp_request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
-        socket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
+        floorSocket.connect(shedIpAddress, schedSocket);
         socket.send(sendPacket);
         socket.disconnect();
 
