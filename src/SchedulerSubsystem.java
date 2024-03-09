@@ -131,7 +131,7 @@ public class SchedulerSubsystem implements Runnable {
         else {
             try {
                 sendRequestToElevator(request, eli); // request elevator to be sent
-                pendingRequestList.remove(0); // removes from pendinglist
+                pendingRequestList.removeFirst(); // removes from pendinglist
             } catch (IOException e) {
             }
         }
