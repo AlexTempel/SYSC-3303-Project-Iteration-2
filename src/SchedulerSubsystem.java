@@ -12,9 +12,12 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
 
+    private final ArrayList<Request> pendingRequestList;
+
     SchedulerSubsystem(int port) throws SocketException {
         elevatorList = new ArrayList<>();
         outstandingRequestList = new ArrayList<>();
+        pendingRequestList = new ArrayList<>();
 
         socket = new DatagramSocket(port);
     }
@@ -63,6 +66,7 @@ public class SchedulerSubsystem implements Runnable {
         } else { //If it isn't a complete request add it to the list of outstanding requests
             selectElevator(request.getRequest());
             outstandingRequestList.add(request.getRequest());
+            pendingRequestList.add(request.getRequest());
         }
     }
 
@@ -94,8 +98,12 @@ public class SchedulerSubsystem implements Runnable {
                 continue;
             }
             dealWithNewRequest(currentRequest);
-
+            checkPending();
         }
+    }
+
+    public void checkPending() {
+        selectElevator(pendingRequestList.getFirst());
     }
 
     /**
