@@ -54,8 +54,20 @@ class SchedulerSubsystemTest {
     void selectElevator() {
         try {
             Request req = new Request(1,4,10);
-            SchedulerSubsystem testScheduler = new SchedulerSubsystem(1);
+            ArrayList<ElevatorSchedulerData> eleva = new ArrayList<>();
+            ElevatorSchedulerData a = new ElevatorSchedulerData(1111, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData b = new ElevatorSchedulerData(1222, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData c = new ElevatorSchedulerData(1333, InetAddress.getLoopbackAddress());
+            ElevatorSchedulerData d = new ElevatorSchedulerData(1444, InetAddress.getLoopbackAddress());
+            eleva.add(a);
+            eleva.add(b);
+            eleva.add(c);
+            eleva.add(d);
 
+            SchedulerSubsystem testScheduler = new SchedulerSubsystem(34, eleva);
+
+            RequestWrapper req1 = new RequestWrapper(req, a);
+            testScheduler.dealWithNewRequest(req1);
             testScheduler.selectElevator(req);
             assertTrue(testScheduler.getElevatorList().getFirst().getInUse(),
                     "first elevator should be running");
