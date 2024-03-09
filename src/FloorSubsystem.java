@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -8,18 +9,18 @@ import java.time.LocalTime;
 
 public class FloorSubsystem implements Runnable {
 
-    private ArrayList<Floor> listOfFloors;
-    private ArrayList<TimedRequest> listOfRequests;
+    private  ArrayList<Floor> listOfFloors;
+    private  ArrayList<TimedRequest> listOfRequests;
+    private final DatagramSocket socket;
 
 
-
-    FloorSubsystem(int numberOfFloors, Request[] buffer) {
+    FloorSubsystem(int port, int numberOfFloors) {
         listOfFloors = new ArrayList<>();
         for (int i = 0; i < numberOfFloors; i++) {
             listOfFloors.add(new Floor(i+1));
         }
         listOfRequests = readCSV("Input.csv");
-
+        socket = new DatagramSocket(port);
     }
 
     /**
