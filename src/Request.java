@@ -1,5 +1,5 @@
 import java.net.DatagramPacket;
-
+import java.nio.charset.StandardCharsets;
 public class Request {
     private final int requestID;
     private final int startingFloor;
@@ -41,7 +41,13 @@ public class Request {
      * @return String that can be put into a UDP packet
      */
     public String convertToPacketMessage() {
-        return ""; //Temporary body
+        int f;
+        if(this.isFinished()){
+            f = 1;
+        } else {
+            f = 0;
+        }
+        return String.valueOf(this.requestID) + "," + String.valueOf(this.startingFloor) + "," + String.valueOf(this.destinationFloor) + "," + String.valueOf(f); //Temporary body
     }
 
     /**
@@ -50,7 +56,9 @@ public class Request {
      * @return Request according to the data in the packet
      */
     public static Request parsePacket(DatagramPacket packet) throws IllegalArgumentException {
-        return new Request(1,1, 2); //Temporary body
+        byte[] d = packet.getData();
+        String m = new String(d);
+        return parseString(m); //Temporary body
     }
 
     /**
@@ -59,6 +67,11 @@ public class Request {
      * @return Request according to the data in the string
      */
     public static Request parseString(String message) throws IllegalArgumentException {
-        return new Request(1, 1, 2); //Temporary body
+        String[] pm = message.split(",");// message format will be requestID,startingFloor,destinationFloor,f
+        Request ret = new Request(Integer.valueOf(pm[0]),Integer.valueOf(pm[1]), Integer.valueOf(pm[2]));
+        if(Integer.valueOf(pm[3]) == 1){
+            ret.complete();
+        }
+        return ret;
     }
 }
