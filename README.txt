@@ -2,10 +2,6 @@ SYSC 3303 Project Iteration 2 Group 8
 
 
 Alex - Scheduler Communication
-The Scheduler receives requests from a socket. If the request is not marked complete, it adds it to the list of outstanding requests and pending requests.
-The list of pending requests are then checked if there is a free elevator and which one is the closest to the starting floor.
-The scheduler then sends this request to the determined elevator and the elevator is marked as in use, and the request is removed from the list of pending requests.
-If the received request is marked complete, it is removed from the list of outstanding requests, and the elevator is marked as no longer in use and its location is updated to the destination floor of the request.
 
 Peter - Scheduler Logic
 
@@ -42,3 +38,9 @@ Each ElevatorSubsystem has an ElevatorDoors attribute. This class opens and clos
 ElevatorSubsystemTest.java:
 Send class for the Elevator subsystem.
 Uses unit tests to verify the functionality of the send/receive Request, handle Request, and move elevator Methods.
+
+SchedulerSubsystem.java:
+The Scheduler receives requests from a socket. If the request is not marked complete, it adds it to the list of outstanding requests and pending requests.
+The list of pending requests are then checked if there is a free elevator and which one is the closest to the starting floor.
+The scheduler then sends this request to the determined elevator and the elevator is marked as in use, and the request is removed from the list of pending requests.
+If the received request is marked complete, it is removed from the list of outstanding requests, and the elevator is marked as no longer in use and its location is updated to the destination floor of the request.
