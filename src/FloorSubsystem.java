@@ -35,7 +35,7 @@ public class FloorSubsystem implements Runnable {
      * @param csvName input csv file
      * @return toReturn the list of timed requests in the desired format
      */
-    public ArrayList<TimedRequest> readCSV(String csvName) {
+    public static ArrayList<TimedRequest> readCSV(String csvName) {
         ArrayList<TimedRequest> toReturn = new ArrayList<TimedRequest>();
         try {
             FileReader file = new FileReader(csvName);

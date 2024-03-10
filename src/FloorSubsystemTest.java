@@ -1,13 +1,14 @@
-import java.nio.charset.StandardCharsets;
+import org.junit.jupiter.api.Test;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import java.net.InetAddress;
-import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class FloorSubsystemTest {
