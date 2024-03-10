@@ -5,29 +5,33 @@ If all on local computer. Run Main.java
 If on separate computers. In Main.java update the IP addresses that are currently set to InetAddress.getLoopbackAddress() to the IP address of whatever machine they are running on.
 And comment out all of the Thread.start() lines of subsystems and elevators you don't want to run.
 
+Responsibilities
 Alex - Scheduler Communication
 
 Peter - Scheduler Logic
 
 Jake - Floor subsystem
-The floor subsystem is in charge of reading the input file and parsing the data into TimedRequest and Request objects,
-checking through all the requests and looking if there is a request for the current time, if there is, then the floor
-converts the request into a packet message then into a datagram packet to then be sent to the scheduler subsystem.
-
-Testing
-CurrentRequest Test Instructions (in FloorSubsystemTest)
-Before running the test, ensure to input your current time into the second row of data (the line after 17:30)
-in TestInput.csv file. Only put hours and minutes, leave the seconds as zeroes. The tests will only run if you do this.
 
 Kam - Elevator
 
 Nemec - Static methods for UDP and Request parsing
 
+Basic Flow of Program
 Floor subsystem continually checks for a request then sends a UDP to scheduler
 
 Scheduler gets Requests from Floor subsystem and determines which Elevator to send it to, waits for confirmation from Elevator
 
-Elevator gets Requests and fulfills it and it send confirmation to Scheduler
+Elevator gets Requests and fulfills it and sends confirmation to Scheduler
+
+FloorSubsystem.java
+The floor subsystem is in charge of reading the input file and parsing the data into TimedRequest and Request objects,
+checking through all the requests and looking if there is a request for the current time, if there is, then the floor
+converts the request into a packet message then into a datagram packet to then be sent to the scheduler subsystem.
+
+FloorSubsystemTest.java
+CurrentRequest Test Instructions (in FloorSubsystemTest)
+Before running the test, ensure to input your current time into the second row of data (the line after 17:30)
+in TestInput.csv file. Only put hours and minutes, leave the seconds as zeroes. The tests will only run if you do this.
 
 ElevatorSubsystem.java:
 This class is responsible for receiving and handling requests from the Scheduler.
