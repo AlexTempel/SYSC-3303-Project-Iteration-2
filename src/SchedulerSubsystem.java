@@ -5,6 +5,7 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.lang.Math;
+import java.util.NoSuchElementException;
 
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket socket;
@@ -51,7 +52,7 @@ public class SchedulerSubsystem implements Runnable {
                 e.setCurrentFloor(request.getRequest().getDestinationFloor());
                 e.setInUse(false);
 
-                System.out.println("Scheduler received request from elevator" + elevatorList.indexOf(e));
+                System.out.println("Scheduler received request from elevator" + (elevatorList.indexOf(e) + 1));
                 return;
             }
         }
@@ -95,7 +96,7 @@ public class SchedulerSubsystem implements Runnable {
 
         elevator.setInUse(true);
 
-        System.out.println("Scheduler sent request to elevator" + elevatorList.indexOf(elevator));
+        System.out.println("Scheduler sent request to elevator" + (elevatorList.indexOf(elevator) + 1));
     }
 
     public void run() {
@@ -114,7 +115,9 @@ public class SchedulerSubsystem implements Runnable {
     }
 
     public void checkPending() {
-        selectElevator(pendingRequestList.getFirst());
+        try {
+            selectElevator(pendingRequestList.getFirst());
+        } catch (NoSuchElementException e) {}
     }
 
     /**
