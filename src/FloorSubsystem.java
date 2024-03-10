@@ -63,10 +63,10 @@ public class FloorSubsystem implements Runnable {
      * request from the list and return the request
      * @return reqToSend the request from the input file that has the same time as the current time
      */
-    public Request getCurrentRequest(){
-        for (TimedRequest r : listOfRequests) {
+    public Request getCurrentRequest(ArrayList<TimedRequest> requests){
+        for (TimedRequest r : requests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
-                listOfRequests.remove(r);
+                requests.remove(r);
                 Request reqToSend = r.getRequest();
                 return reqToSend;
             }
@@ -74,7 +74,8 @@ public class FloorSubsystem implements Runnable {
         try { //Wait half a second and check again
             Thread.sleep(500);
         } catch (Exception e) {}
-        return getCurrentRequest();
+
+        return getCurrentRequest(requests);
     }
 
     /**
@@ -82,8 +83,8 @@ public class FloorSubsystem implements Runnable {
      * Gets the request at the current time, convert it to a message string, then into a datagram packet and sends it
      * to the scheduler.
      */
-    public void sendToScheduler() throws IOException {
-        Request temp_request = getCurrentRequest();
+    public void sendToScheduler(ArrayList<TimedRequest> requests) throws IOException {
+        Request temp_request = getCurrentRequest(requests);
         String message = temp_request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
@@ -92,11 +93,15 @@ public class FloorSubsystem implements Runnable {
         floorSocket.disconnect();
     }
 
+    public DatagramSocket getFloorSocket(){
+        return floorSocket;
+    }
+
     public void run() {
         System.out.println("Floor Subsystem Starting");
         while (true) {
             try {
-                sendToScheduler();
+                sendToScheduler(listOfRequests);
             } catch (IOException e) {
                 continue;
             }

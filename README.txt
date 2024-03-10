@@ -6,6 +6,10 @@ Alex - Scheduler Communication
 Peter - Scheduler Logic
 
 Jake - Floor subsystem
+     - CurrentRequest Test Instructions
+        When testing, ensure to input your current time into the second row of data (the line after 17:30)
+        in TestInput.csv, only put hours and minutes, leave the seconds as zeroes this test will only assert
+        true if it is your PC's local time in the file
 
 Kam - Elevator
 
