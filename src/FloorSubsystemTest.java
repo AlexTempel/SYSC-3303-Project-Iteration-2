@@ -1,3 +1,6 @@
+import java.nio.charset.StandardCharsets;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.net.InetAddress;
@@ -8,11 +11,6 @@ import java.util.ArrayList;
 
 
 class FloorSubsystemTest {
-
-
-
-
-
     @Test
     void readCSV() {
         try{
@@ -43,14 +41,13 @@ class FloorSubsystemTest {
             InetAddress ipAddress = InetAddress.getLoopbackAddress();
             int testFloorPort = 16001;
             int testSchedPort = 17001;
-            ArrayList<TimedRequest> testRequests = new ArrayList<TimedRequest>();;
+            ArrayList<TimedRequest> testRequests = new ArrayList<TimedRequest>();
             String file = "TestInput.csv";
 
             FloorSubsystem testFloor = new FloorSubsystem(testFloorPort, testSchedPort, 5, ipAddress);
 
             testRequests = testFloor.readCSV(file);
-            Request testRequest;
-            testRequest = testFloor.getCurrentRequest(testRequests);
+            Request testRequest = testFloor.getCurrentRequest(testRequests);
 
             assertEquals(2, testRequest.getRequestID());
             assertEquals(16, testRequest.getStartingFloor());
@@ -65,6 +62,28 @@ class FloorSubsystemTest {
     @org.junit.jupiter.api.Test
     void sendToScheduler() {
         try{
+            InetAddress ipAddress = InetAddress.getLoopbackAddress();
+            int testFloorPort = 16002;
+            int testSchedPort = 17002;
+            ArrayList<TimedRequest> testRequests = new ArrayList<TimedRequest>();
+            String file = "TestInput.csv";
+            FloorSubsystem testFloor = new FloorSubsystem(testFloorPort, testSchedPort, 5, ipAddress);
+            testRequests = testFloor.readCSV(file);
+            Request testRequest = new Request(3,1,3);
+
+            // Build dummy socket and message
+            String message = testRequest.convertToPacketMessage();
+            InetAddress elevatorAddress = InetAddress.getByName("127.0.0.1");
+            DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length, elevatorAddress,19505);
+            DatagramSocket mySocket = new DatagramSocket(17002);
+
+            // Send to Elevator socket
+            mySocket.send(sendPacket);
+
+            // Receive Request from Elevator
+            Request readReq = testFloor.getRequestData();
+            assertEquals(req.convertToPacketMessage(), readReq.convertToPacketMessage());
+
 
         } catch (Exception e){
             throw new RuntimeException(e);
