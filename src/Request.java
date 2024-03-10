@@ -69,7 +69,7 @@ public class Request {
     public static Request parseString(String message) throws IllegalArgumentException {
         String[] pm = message.split(",");// message format will be requestID,startingFloor,destinationFloor,f
         Request ret = new Request(Integer.valueOf(pm[0]),Integer.valueOf(pm[1]), Integer.valueOf(pm[2]));
-        char comp = pm[3].charAt(0); // Separate "finished" indicator bit
+        char temp = pm[3].charAt(0); // Separate "finished" indicator bit
         if(Character.getNumericValue(temp) == 1){
             ret.complete();
         }
