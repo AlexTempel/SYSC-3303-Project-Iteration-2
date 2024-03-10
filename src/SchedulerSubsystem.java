@@ -13,9 +13,17 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> outstandingRequestList;
 
 
-    SchedulerSubsystem(int port) throws SocketException {
-        elevatorList = new ArrayList<>();
+    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
+        this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
+        pendingRequestList = new ArrayList<>();
+
+        socket = new DatagramSocket(port);
+    }
+
+    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
+        this.elevatorList = elevatorList;
+        this.outstandingRequestList = outstandingRequestList;
         pendingRequestList = new ArrayList<>();
 
         socket = new DatagramSocket(port);
@@ -112,7 +120,7 @@ public class SchedulerSubsystem implements Runnable {
      */
     public void selectElevator(Request request) {
         int x = 0; // used for deciding if elevators are all in use
-        ElevatorSchedulerData eli = elevatorList.get(0);
+        ElevatorSchedulerData eli = elevatorList.getFirst();
         for (int i = 0; i < 4; i++) { // checks each elevator
             if (elevatorList.get(i).getInUse()){
                 x++; // if an elevator is in use adds 1 to x
@@ -131,9 +139,20 @@ public class SchedulerSubsystem implements Runnable {
         else {
             try {
                 sendRequestToElevator(request, eli); // request elevator to be sent
-                pendingRequestList.remove(0); // removes from pendinglist
+                pendingRequestList.removeFirst(); // removes from pendinglist
             } catch (IOException e) {
             }
         }
+    }
+    public ArrayList<ElevatorSchedulerData> getElevatorList(){
+        return elevatorList;
+    }
+
+    public ArrayList<Request> getOutstandingRequestList() {
+        return outstandingRequestList;
+    }
+
+    public ArrayList<Request> getPendingRequestList() {
+        return pendingRequestList;
     }
 }
