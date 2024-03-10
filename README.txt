@@ -1,5 +1,9 @@
 SYSC 3303 Project Iteration 2 Group 8
 
+Instructions to Run
+If all on local computer. Run Main.java
+If on separate computers. In Main.java update the IP addresses that are currently set to InetAddress.getLoopbackAddress() to the IP address of whatever machine they are running on.
+And comment out all of the Thread.start() lines of subsystems and elevators you don't want to run.
 
 Alex - Scheduler Communication
 
