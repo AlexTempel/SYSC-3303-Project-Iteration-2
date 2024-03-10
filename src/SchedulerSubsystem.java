@@ -50,6 +50,8 @@ public class SchedulerSubsystem implements Runnable {
             if (e.compare(request.getElevator())) {
                 e.setCurrentFloor(request.getRequest().getDestinationFloor());
                 e.setInUse(false);
+
+                System.out.println("Scheduler received request from elevator" + elevatorList.indexOf(e));
                 return;
             }
         }
@@ -73,6 +75,7 @@ public class SchedulerSubsystem implements Runnable {
         } else { //If it isn't a complete request add it to the list of outstanding requests
             outstandingRequestList.add(request.getRequest());
             pendingRequestList.add(request.getRequest());
+            System.out.println("Scheduler received request from floor");
         }
     }
 
@@ -91,6 +94,8 @@ public class SchedulerSubsystem implements Runnable {
         socket.disconnect();
 
         elevator.setInUse(true);
+
+        System.out.println("Scheduler sent request to elevator" + elevatorList.indexOf(elevator));
     }
 
     public void run() {

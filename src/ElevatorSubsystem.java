@@ -53,6 +53,7 @@ public class ElevatorSubsystem implements Runnable {
         socket.send(sendPacket);
         socket.disconnect();
 
+        System.out.println("Elevator sent complete request");
     }
 
 
@@ -70,6 +71,7 @@ public class ElevatorSubsystem implements Runnable {
             schedulerPort = receivePacket.getPort();
         }
 
+        System.out.println("Elevator received request from scheduler");
         return Request.parsePacket(receivePacket);
     }
 

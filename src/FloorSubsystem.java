@@ -91,6 +91,8 @@ public class FloorSubsystem implements Runnable {
         floorSocket.connect(shedIpAddress, schedulerPort);
         floorSocket.send(sendPacket);
         floorSocket.disconnect();
+
+        System.out.println("Floor Subsystem sent request to scheduler");
     }
 
     public DatagramSocket getFloorSocket(){
