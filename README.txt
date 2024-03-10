@@ -2,12 +2,16 @@ SYSC 3303 Project Iteration 2 Group 8
 
 
 Alex - Scheduler Communication
+The Scheduler receives requests from a socket. If the request is not marked complete, it adds it to the list of outstanding requests and pending requests.
+The list of pending requests are then checked if there is a free elevator and which one is the closest to the starting floor.
+The scheduler then sends this request to the determined elevator and the elevator is marked as in use, and the request is removed from the list of pending requests.
+If the received request is marked complete, it is removed from the list of outstanding requests, and the elevator is marked as no longer in use and its location is updated to the destination floor of the request.
 
 Peter - Scheduler Logic
 
 Jake - Floor subsystem
-The floor subsystem is in charge of reading the input file and pasring the data into TimedRequest and Request objects,
-checking through all the requests and looking if there is a request for the current ttime, if there is, then the floor
+The floor subsystem is in charge of reading the input file and parsing the data into TimedRequest and Request objects,
+checking through all the requests and looking if there is a request for the current time, if there is, then the floor
 converts the request into a packet message then into a datagram packet to then be sent to the scheduler subsystem.
 
 Testing
