@@ -44,6 +44,13 @@ public class Main {
 
             Thread floorThread = new Thread(floorSubsystem);
 
+            elevator1Thread.start();
+            elevator2Thread.start();
+            elevator3Thread.start();
+            elevator4Thread.start();
+            schedulerThread.start();
+            floorThread.start();
+
         } catch (SocketException ex) {
             throw new RuntimeException(ex);
         }
