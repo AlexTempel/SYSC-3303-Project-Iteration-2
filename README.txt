@@ -11,7 +11,7 @@ checking through all the requests and looking if there is a request for the curr
 converts the request into a packet message then into a datagram packet to then be sent to the scheduler subsystem.
 
 Testing
-CurrentRequest Test Instructions
+CurrentRequest Test Instructions (in FloorSubsystemTest)
 Before running the test, ensure to input your current time into the second row of data (the line after 17:30)
 in TestInput.csv file. Only put hours and minutes, leave the seconds as zeroes. The tests will only run if you do this.
 
@@ -44,3 +44,12 @@ The Scheduler receives requests from a socket. If the request is not marked comp
 The list of pending requests are then checked if there is a free elevator and which one is the closest to the starting floor.
 The scheduler then sends this request to the determined elevator and the elevator is marked as in use, and the request is removed from the list of pending requests.
 If the received request is marked complete, it is removed from the list of outstanding requests, and the elevator is marked as no longer in use and its location is updated to the destination floor of the request.
+
+ElevatorSchedulerData.java
+This is a data structure that contains the information the scheduler knows about the elevators.
+
+RequestWrapper.java
+This is a data structure that contains both a request and elevator. It is only used by the scheduler to bundle data from packets from the elevators together.
+
+SchedulerSubsystemTest.java
+Collection of tests for SchedulerSubsystem
