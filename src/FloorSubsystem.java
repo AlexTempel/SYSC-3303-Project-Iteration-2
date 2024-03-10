@@ -26,7 +26,7 @@ public class FloorSubsystem implements Runnable {
         for (int i = 0; i < numberOfFloors; i++) {
             listOfFloors.add(new Floor(i+1));
         }
-        listOfRequests = readCSV("Input.csv");
+        listOfRequests = readCSV("Input.txt");
 
     }
 
