@@ -6,10 +6,14 @@ Alex - Scheduler Communication
 Peter - Scheduler Logic
 
 Jake - Floor subsystem
-     - CurrentRequest Test Instructions
-        When testing, ensure to input your current time into the second row of data (the line after 17:30)
-        in TestInput.csv, only put hours and minutes, leave the seconds as zeroes this test will only assert
-        true if it is your PC's local time in the file
+The floor subsystem is in charge of reading the input file and pasring the data into TimedRequest and Request objects,
+checking through all the requests and looking if there is a request for the current ttime, if there is, then the floor
+converts the request into a packet message then into a datagram packet to then be sent to the scheduler subsystem.
+
+Testing
+CurrentRequest Test Instructions
+Before running the test, ensure to input your current time into the second row of data (the line after 17:30)
+in TestInput.csv file. Only put hours and minutes, leave the seconds as zeroes. The tests will only run if you do this.
 
 Kam - Elevator
 
