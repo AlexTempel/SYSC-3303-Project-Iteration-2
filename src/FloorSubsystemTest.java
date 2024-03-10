@@ -72,7 +72,7 @@ class FloorSubsystemTest {
             String file = "TestInput.csv";
             testRequests = testFloor.readCSV(file);
 
-            //take the request occuring right now and form it into a packet message
+            //take the request occurring right now and form it into a packet message
             Request testRequest = testFloor.getCurrentRequest(testRequests);
             String message = testRequest.convertToPacketMessage();
 
