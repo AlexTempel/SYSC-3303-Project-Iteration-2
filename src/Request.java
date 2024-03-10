@@ -47,7 +47,7 @@ public class Request {
         } else {
             f = 0;
         }
-        return String.valueOf(this.requestID) + "," + String.valueOf(this.startingFloor) + "," + String.valueOf(this.destinationFloor) + "," + String.valueOf(f); //Temporary body
+        return String.valueOf(this.requestID) + "," + String.valueOf(this.startingFloor) + "," + String.valueOf(this.destinationFloor) + "," + String.valueOf(f);
     }
 
     /**
@@ -58,7 +58,7 @@ public class Request {
     public static Request parsePacket(DatagramPacket packet) throws IllegalArgumentException {
         byte[] d = packet.getData();
         String m = new String(d);
-        return parseString(m); //Temporary body
+        return parseString(m);
     }
 
     /**
