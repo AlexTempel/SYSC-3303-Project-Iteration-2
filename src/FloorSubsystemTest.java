@@ -14,7 +14,7 @@ class FloorSubsystemTest {
     @Test
     void readCSV() {
         try{
-            InetAddress ipAddress = InetAddress.getLoopbackAddress();
+            InetAddress ipAddress = InetAddress.getLocalHost();
             int testFloorPort = 16000;
             int testSchedPort = 17000;
 
@@ -65,24 +65,31 @@ class FloorSubsystemTest {
             InetAddress ipAddress = InetAddress.getLoopbackAddress();
             int testFloorPort = 16002;
             int testSchedPort = 17002;
+            FloorSubsystem testFloor = new FloorSubsystem(testFloorPort, testSchedPort, 5, ipAddress);
+
+            //Get request list from input file
             ArrayList<TimedRequest> testRequests = new ArrayList<TimedRequest>();
             String file = "TestInput.csv";
-            FloorSubsystem testFloor = new FloorSubsystem(testFloorPort, testSchedPort, 5, ipAddress);
             testRequests = testFloor.readCSV(file);
-            Request testRequest = new Request(3,1,3);
 
-            // Build dummy socket and message
+            //take the request occuring right now and form it into a packet message
+            Request testRequest = testFloor.getCurrentRequest(testRequests);
             String message = testRequest.convertToPacketMessage();
-            InetAddress elevatorAddress = InetAddress.getByName("127.0.0.1");
-            DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length, elevatorAddress,19505);
-            DatagramSocket mySocket = new DatagramSocket(17002);
 
-            // Send to Elevator socket
-            mySocket.send(sendPacket);
+            // Build dummy socket to receive
+            InetAddress schedulerAddress = InetAddress.getByName("127.0.0.1");
+            DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length, schedulerAddress,testSchedPort);
+            DatagramSocket receiveSocket = new DatagramSocket(testSchedPort);
 
-            // Receive Request from Elevator
-            Request readReq = testFloor.getRequestData();
-            assertEquals(req.convertToPacketMessage(), readReq.convertToPacketMessage());
+            // Send to Scheduler socket
+            testFloor.getFloorSocket().send(sendPacket);
+
+
+            DatagramPacket receivedPacket = new DatagramPacket(new byte[1024], 1024);
+            receiveSocket.receive(receivedPacket);
+
+            // Receive Request from floor
+            assertEquals(message, Request.parsePacket(receivedPacket).convertToPacketMessage());
 
 
         } catch (Exception e){

@@ -93,6 +93,10 @@ public class FloorSubsystem implements Runnable {
         floorSocket.disconnect();
     }
 
+    public DatagramSocket getFloorSocket(){
+        return floorSocket;
+    }
+
     public void run() {
         System.out.println("Floor Subsystem Starting");
         while (true) {
