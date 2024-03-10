@@ -70,8 +70,25 @@ class SchedulerSubsystemTest {
     }
 
     @org.junit.jupiter.api.Test
-    void sendRequestToElevator() {
+    void sendRequestToElevator() throws Exception {
+        ArrayList<ElevatorSchedulerData> elevatorList = new ArrayList<>();
+        ElevatorSchedulerData e1 = new ElevatorSchedulerData(10000, InetAddress.getLoopbackAddress());
+        elevatorList.add(e1);
 
+        SchedulerSubsystem testSystem = new SchedulerSubsystem(10001, elevatorList);
+
+        DatagramSocket dummySocket = new DatagramSocket(10000);
+
+        Request req = new Request(1, 1, 20);
+        testSystem.sendRequestToElevator(req, e1);
+
+        assertTrue(e1.getInUse());
+
+        DatagramPacket received = new DatagramPacket(new byte[1024], 1024);
+        dummySocket.receive(received);
+        Request receivedRequest = Request.parsePacket(received);
+
+        assertEquals(req.getRequestID(), receivedRequest.getRequestID());
     }
 
     @org.junit.jupiter.api.Test
