@@ -52,7 +52,7 @@ public class SchedulerSubsystem implements Runnable {
                 e.setCurrentFloor(request.getRequest().getDestinationFloor());
                 e.setInUse(false);
 
-                System.out.println("Scheduler received request from elevator" + (elevatorList.indexOf(e) + 1));
+                System.out.println("Scheduler received request from elevator " + (elevatorList.indexOf(e) + 1));
                 return;
             }
         }
@@ -96,7 +96,7 @@ public class SchedulerSubsystem implements Runnable {
 
         elevator.setInUse(true);
 
-        System.out.println("Scheduler sent request to elevator" + (elevatorList.indexOf(elevator) + 1));
+        System.out.println("Scheduler sent request to elevator " + (elevatorList.indexOf(elevator) + 1));
     }
 
     public void run() {
@@ -114,9 +114,14 @@ public class SchedulerSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Checks if any pending requests can be sent. If so check the next one
+     */
     public void checkPending() {
         try {
-            selectElevator(pendingRequestList.getFirst());
+            if (selectElevator(pendingRequestList.getFirst())) {
+                checkPending();
+            }
         } catch (NoSuchElementException e) {}
     }
 
@@ -126,7 +131,8 @@ public class SchedulerSubsystem implements Runnable {
      * request from pending
      * @param request
      */
-    public void selectElevator(Request request) {
+    public boolean selectElevator(Request request) {
+        /*
         int x = 0; // used for deciding if elevators are all in use
         ElevatorSchedulerData eli = elevatorList.getFirst();
         for (int i = 0; i < 4; i++) { // checks each elevator
@@ -151,6 +157,28 @@ public class SchedulerSubsystem implements Runnable {
             } catch (IOException e) {
             }
         }
+
+         */
+        int smallestDifference = 100000;
+        ElevatorSchedulerData closestElevator = null;
+        for (ElevatorSchedulerData e : elevatorList) {
+            if (!e.getInUse()) {
+                if (smallestDifference >= Math.abs(e.getCurrentFloor() - request.getStartingFloor())) {
+                    smallestDifference = Math.abs(e.getCurrentFloor() - request.getStartingFloor());
+                    closestElevator = e;
+                }
+            }
+        }
+        if (closestElevator != null) {
+            try {
+                sendRequestToElevator(request, closestElevator);
+                pendingRequestList.removeFirst();
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return false;
     }
     public ArrayList<ElevatorSchedulerData> getElevatorList(){
         return elevatorList;

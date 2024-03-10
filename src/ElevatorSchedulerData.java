@@ -34,6 +34,6 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
     }
 
     public boolean compare(ElevatorSchedulerData otherElevator) {
-        return (this.ipAddress == otherElevator.ipAddress && this.socketNumber == otherElevator.socketNumber);
+        return (this.socketNumber == otherElevator.socketNumber);
     }
 }

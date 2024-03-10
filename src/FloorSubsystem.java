@@ -107,7 +107,6 @@ public class FloorSubsystem implements Runnable {
             } catch (IOException e) {
                 continue;
             }
-            System.out.println("Sent to Scheduler");
         }
     }
 }
