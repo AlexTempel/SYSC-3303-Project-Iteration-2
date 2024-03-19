@@ -1,4 +1,4 @@
-SYSC 3303 Project Iteration 2 Group 8
+SYSC 3303 Project Iteration 4 Group 8
 
 Instructions to Run
 If all on local computer. Run Main.java

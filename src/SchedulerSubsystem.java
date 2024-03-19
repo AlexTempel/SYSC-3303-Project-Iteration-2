@@ -13,7 +13,6 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
 
-
     SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
         this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
@@ -132,33 +131,6 @@ public class SchedulerSubsystem implements Runnable {
      * @param request
      */
     public boolean selectElevator(Request request) {
-        /*
-        int x = 0; // used for deciding if elevators are all in use
-        ElevatorSchedulerData eli = elevatorList.getFirst();
-        for (int i = 0; i < 4; i++) { // checks each elevator
-            if (elevatorList.get(i).getInUse()){
-                x++; // if an elevator is in use adds 1 to x
-            }
-            else { // checks and sets the current closeted floor to the request
-                if (Math.abs(eli.getCurrentFloor() - request.getStartingFloor()) >
-                        Math.abs(elevatorList.get(i).getCurrentFloor()
-                                - request.getStartingFloor())) {
-                    eli = elevatorList.get(i);
-                }
-            }
-        }
-        if (x == 4) {
-            // elevator are all in use so does nothing
-        }
-        else {
-            try {
-                sendRequestToElevator(request, eli); // request elevator to be sent
-                pendingRequestList.removeFirst(); // removes from pendinglist
-            } catch (IOException e) {
-            }
-        }
-
-         */
         int smallestDifference = 100000;
         ElevatorSchedulerData closestElevator = null;
         for (ElevatorSchedulerData e : elevatorList) {
