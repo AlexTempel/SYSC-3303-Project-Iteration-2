@@ -5,6 +5,30 @@ If all on local computer. Run Main.java
 If on separate computers. In Main.java update the IP addresses that are currently set to InetAddress.getLoopbackAddress() to the IP address of whatever machine they are running on.
 And comment out all of the Thread.start() lines of subsystems and elevators you don't want to run.
 
+State Diagrams: Alex and Jake
+- For elevator add open/close state:
+- Scheduler diagram
+- Floor diagram
+
+Class diagrams: Peter
+- Update methods to reflect UDP communication logic
+
+Sequence Diagram: Peter
+- Add sequence diagram for Request Handling
+
+FloorSubsystem: Nik Nemec
+- Add state variable
+- Add logic to determine if the request has an error (e.g. Floor does not exist)
+- Print error message, do not send error Request to Scheduler
+
+ElevatorSubsystem: Nick Kam
+- Random chance for doors to jam
+- ENUM state variable
+
+SchedulerSubsystem: Alex
+- Add state variable
+
+
 Responsibilities
 Alex - Scheduler Communication
 
