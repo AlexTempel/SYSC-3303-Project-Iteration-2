@@ -12,6 +12,7 @@ public class ElevatorSubsystem implements Runnable {
     private int current_floor;
     private InetAddress schedulerAddress = null;
     private int schedulerPort = -1;
+    private ElevatorState state;
 
     /**
      * Contruct the ElevatorSubsystem Object
@@ -22,6 +23,7 @@ public class ElevatorSubsystem implements Runnable {
         this.doors = new ElevatorDoors();
         this.socket = new DatagramSocket(id);
         this.current_floor = 1; //start the Elevator at the ground floor
+        this.state = ElevatorState.WAITING;
 
     }
 
@@ -32,12 +34,16 @@ public class ElevatorSubsystem implements Runnable {
         System.out.println("Starting Elevator");
         while (true) {
             // Obtain formatted request data
+            state = ElevatorState.WAITING;
+            System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
             try {
                 Request myRequest = getRequestData();
                 handleRequest(myRequest);
                 // Send completed request back to scheduler
                 sendConfirmation(myRequest);
-            }catch(IOException e){}
+            }catch(IOException e){} catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -82,6 +88,11 @@ public class ElevatorSubsystem implements Runnable {
     public void moveElevator(int destination) {
         // Check how many floors elevator needs to travel
         int floorDifference = Math.abs(current_floor - destination);
+
+        // Print state
+        state = ElevatorState.MOVING;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+
         for (int i = floorDifference; i > 0; i--) {
             System.out.printf("Elevator %d needs to travel %d floors to reach destination\n", elevator_id, i);
             try {
@@ -96,7 +107,7 @@ public class ElevatorSubsystem implements Runnable {
     /**
      * Moves the elevator to the starting floor, then to the destination floor
      */
-    public void handleRequest(Request currentReq) {
+    public void handleRequest(Request currentReq) throws InterruptedException {
         int startingFloor = currentReq.getStartingFloor();
         int endingFloor = currentReq.getDestinationFloor();
 
@@ -104,15 +115,30 @@ public class ElevatorSubsystem implements Runnable {
         if (startingFloor != current_floor) {
             moveElevator(startingFloor);
         }
-        // Open Elevator Doors
-        doors.cycleDoors();
+        // Open Close Elevator Doors
+        cycleDoors();
 
         // Move to destination floor
         moveElevator(endingFloor);
-        doors.cycleDoors();
+
+        cycleDoors();
 
         // Mark complete
         currentReq.complete();
+    }
+
+    private void cycleDoors() throws InterruptedException {
+        state = ElevatorState.DOORS_OPEN;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+        doors.toggleDoors();
+
+        state = ElevatorState.LOADING;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+        Thread.sleep(2000);
+
+        doors.toggleDoors();
+        state = ElevatorState.DOORS_CLOSE;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
     }
 
     public int getCurrentFloor(){
@@ -121,5 +147,15 @@ public class ElevatorSubsystem implements Runnable {
 
     public void closeSocket(){
         socket.close();
+    }
+
+    public enum ElevatorState {
+
+        WAITING,
+        MOVING,
+        DOORS_OPEN,
+        DOORS_CLOSE,
+        LOADING
+
     }
 }
