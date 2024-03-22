@@ -17,6 +17,12 @@ public class FloorSubsystem implements Runnable {
     private final DatagramSocket floorSocket;
     private final int schedulerPort;
     private final InetAddress shedIpAddress;
+    private enum state {
+        reading,
+        checkCurrRequest,
+        sendingRequest
+    }
+    private Enum<state> currentState;
 
     FloorSubsystem(int floorPort, int schedPort, int numberOfFloors, InetAddress shedIpAddress) throws SocketException {
         this.shedIpAddress = shedIpAddress;
@@ -26,6 +32,7 @@ public class FloorSubsystem implements Runnable {
         for (int i = 0; i < numberOfFloors; i++) {
             listOfFloors.add(new Floor(i+1));
         }
+        currentState = state.reading;
         listOfRequests = readCSV("Input.txt");
 
     }
@@ -64,6 +71,7 @@ public class FloorSubsystem implements Runnable {
      * @return reqToSend the request from the input file that has the same time as the current time
      */
     public Request getCurrentRequest(ArrayList<TimedRequest> requests){
+        currentState = state.checkCurrRequest;
         for (TimedRequest r : requests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
                 requests.remove(r);
@@ -84,6 +92,7 @@ public class FloorSubsystem implements Runnable {
      * to the scheduler.
      */
     public void sendToScheduler(ArrayList<TimedRequest> requests) throws IOException {
+        currentState = state.sendingRequest;
         Request temp_request = getCurrentRequest(requests);
         String message = temp_request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
