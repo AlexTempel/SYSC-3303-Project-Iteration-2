@@ -13,15 +13,16 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
     private enum state {
-        waiting,
-        handlingRequest,
-        clearingPending,
-        sendingRequest
+        WAITING,
+        HANDLING_REQUEST,
+        CLEARING_PENDING,
+        SENDING_REQUEST
     }
     private Enum<state> currentState;
 
     SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
-        currentState = state.waiting;
+        currentState = state.WAITING;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
         this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
         pendingRequestList = new ArrayList<>();
@@ -43,7 +44,8 @@ public class SchedulerSubsystem implements Runnable {
      * @throws IOException if it cannot receive on socket for some reason
      */
     public RequestWrapper getRequestFromInternet() throws IOException {
-        currentState = state.waiting;
+        currentState = state.WAITING;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         socket.receive(receivePacket);
 
@@ -73,7 +75,8 @@ public class SchedulerSubsystem implements Runnable {
      * @param request the new message from the internet
      */
     public void dealWithNewRequest(RequestWrapper request) {
-        currentState = state.handlingRequest;
+        currentState = state.HANDLING_REQUEST;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
         if (request.getRequest().isFinished()) { //If the request says it is done
             for (Request r : outstandingRequestList) { //Remove that request from the list of requests
                 if (request.getRequest().getRequestID() == r.getRequestID()) { //Two requests are the same if they have the same requestID
@@ -96,7 +99,8 @@ public class SchedulerSubsystem implements Runnable {
      * @throws IOException If there is an error sending the packet
      */
     public void sendRequestToElevator(Request request, ElevatorSchedulerData elevator) throws IOException {
-        currentState = state.sendingRequest;
+        currentState = state.SENDING_REQUEST;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
         String message = request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
@@ -128,7 +132,8 @@ public class SchedulerSubsystem implements Runnable {
      * Checks if any pending requests can be sent. If so check the next one
      */
     public void checkPending() {
-        currentState = state.clearingPending;
+        currentState = state.CLEARING_PENDING;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
         try {
             if (selectElevator(pendingRequestList.getFirst())) {
                 checkPending();
