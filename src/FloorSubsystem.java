@@ -46,7 +46,17 @@ public class FloorSubsystem implements Runnable {
             while(line != null){
                 counterID = counterID + 1;
                 line = input.readLine();
-                String[] values = line.split(" ");
+                String[] values = line.split(" "); // values are Time, Floor, Direction and Destination Floor
+
+
+
+                if(((Integer.parseInt(values[1]) < Integer.parseInt(values[3])) && (values[2].equalsIgnoreCase("down"))) ||
+                        ((Integer.parseInt(values[1]) > Integer.parseInt(values[3])) && (values[2].equalsIgnoreCase("up"))) ||
+                        (Integer.parseInt(values[1]) <= 0) || (Integer.parseInt(values[3]) <= 0) ||
+                        (Integer.parseInt(values[3]) > 22) || (Integer.parseInt(values[1]) > 22)){
+                    System.out.println("An erroneous entry has been detected, skipping request...");
+                    continue;
+                }
 
                 Request newRequest = new Request(counterID, Integer.parseInt(values[1]), Integer.parseInt(values[3]));
 
