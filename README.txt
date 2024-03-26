@@ -1,4 +1,18 @@
-SYSC 3303 Project Iteration 4 Group 8
+SYSC 3303 Project Iteration 5 Group 8
+
+Iteration 5 Stuff:
+Peter: Write the report
+Nemec: Write console in scheduler and make timing diagram
+Kam: Update the elevators to take multiple requests and update Scheduler every time they move
+Alex: Update the Scheduler to be able to send multiple requests
+Jake: Create Elevator-Scheduler Data class and static methods
+
+The new Elevator-Scheduler class should have:
+Direction
+Number of passengers
+Current Floor
+Broken State
+
 
 Instructions to Run
 If all on local computer. Run Main.java
