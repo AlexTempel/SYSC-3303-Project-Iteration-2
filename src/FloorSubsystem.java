@@ -82,8 +82,10 @@ public class FloorSubsystem implements Runnable {
      * @return reqToSend the request from the input file that has the same time as the current time
      */
     public Request getCurrentRequest(ArrayList<TimedRequest> requests){
-        currentState = state.CHECKING_CURRENT_REQUEST;
-        System.out.printf("Floor Subsystem Current State: %s\n", currentState);
+        if (currentState != state.CHECKING_CURRENT_REQUEST) {
+            currentState = state.CHECKING_CURRENT_REQUEST;
+            System.out.printf("Floor Subsystem Current State: %s\n", currentState);
+        }
         for (TimedRequest r : requests) {
             if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
                 requests.remove(r);

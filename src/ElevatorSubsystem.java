@@ -32,7 +32,7 @@ public class ElevatorSubsystem implements Runnable {
      */
     public void run() {
         System.out.println("Starting Elevator");
-        while (true) {
+        while (state != ElevatorState.BROKEN) {
             // Obtain formatted request data
             state = ElevatorState.WAITING;
             System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
@@ -94,6 +94,11 @@ public class ElevatorSubsystem implements Runnable {
         System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
 
         for (int i = floorDifference; i > 0; i--) {
+            if (Math.random() <= 0.01) {
+                state = ElevatorState.BROKEN;
+                System.out.printf("Elevator %d is broken\n", elevator_id);
+                return;
+            }
             System.out.printf("Elevator %d needs to travel %d floors to reach destination\n", elevator_id, i);
             try {
                 Thread.sleep(1000); // Simulate travel time
@@ -114,12 +119,18 @@ public class ElevatorSubsystem implements Runnable {
         // Move from the current floor to the starting floor
         if (startingFloor != current_floor) {
             moveElevator(startingFloor);
+            if (state == ElevatorState.BROKEN) {
+                return;
+            }
         }
         // Open Close Elevator Doors
         cycleDoors();
 
         // Move to destination floor
         moveElevator(endingFloor);
+        if (state == ElevatorState.BROKEN) {
+            return;
+        }
 
         cycleDoors();
 
@@ -155,7 +166,8 @@ public class ElevatorSubsystem implements Runnable {
         MOVING,
         DOORS_OPEN,
         DOORS_CLOSE,
-        LOADING
+        LOADING,
+        BROKEN
 
     }
 }
