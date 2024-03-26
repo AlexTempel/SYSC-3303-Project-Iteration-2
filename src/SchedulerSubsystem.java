@@ -8,7 +8,8 @@ import java.lang.Math;
 import java.util.NoSuchElementException;
 
 public class SchedulerSubsystem implements Runnable {
-    private final DatagramSocket socket;
+    private final DatagramSocket mainSocket;
+    private final DatagramSocket elevatorUpdateSocket;
     private final ArrayList<ElevatorSchedulerData> elevatorList;
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
@@ -20,22 +21,24 @@ public class SchedulerSubsystem implements Runnable {
     }
     private Enum<state> currentState;
 
-    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
+    SchedulerSubsystem(int mainPort, int elevatorCommunicationPort, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
         currentState = state.WAITING;
         System.out.printf("Scheduler Current State: %s\n", currentState);
         this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
         pendingRequestList = new ArrayList<>();
 
-        socket = new DatagramSocket(port);
+        mainSocket = new DatagramSocket(mainPort);
+        elevatorUpdateSocket = new DatagramSocket(elevatorCommunicationPort);
     }
 
-    SchedulerSubsystem(int port, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
+    SchedulerSubsystem(int port, int elevatorCommuncationPort, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
         this.elevatorList = elevatorList;
         this.outstandingRequestList = outstandingRequestList;
         pendingRequestList = new ArrayList<>();
 
-        socket = new DatagramSocket(port);
+        mainSocket = new DatagramSocket(port);
+        elevatorUpdateSocket = new DatagramSocket(elevatorCommuncationPort);
     }
 
     /**
@@ -47,7 +50,7 @@ public class SchedulerSubsystem implements Runnable {
         currentState = state.WAITING;
         System.out.printf("Scheduler Current State: %s\n", currentState);
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
-        socket.receive(receivePacket);
+        mainSocket.receive(receivePacket);
 
         return new RequestWrapper(Request.parsePacket(receivePacket), new ElevatorSchedulerData(receivePacket.getPort(), receivePacket.getAddress()));
     }
@@ -104,9 +107,9 @@ public class SchedulerSubsystem implements Runnable {
         String message = request.convertToPacketMessage();
         DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
 
-        socket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
-        socket.send(sendPacket);
-        socket.disconnect();
+        mainSocket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
+        mainSocket.send(sendPacket);
+        mainSocket.disconnect();
 
         elevator.setInUse(true);
 
@@ -126,6 +129,18 @@ public class SchedulerSubsystem implements Runnable {
             dealWithNewRequest(currentRequest);
             checkPending();
         }
+
+        /*
+        1. Check for incoming requests
+            If there is a request decode it
+                If it is a new request add it to the list of outstanding requests and pending requests. Give it a timestamp.
+                If it is a complete request remove it from the list of outstanding requests and update the elevator
+        2. Check for incoming elevator updates
+            If there is an update, update the elevator info
+        3. Delegate the pending tasks.
+         */
+
+
     }
 
     /**
@@ -168,6 +183,10 @@ public class SchedulerSubsystem implements Runnable {
             }
         }
         return false;
+    }
+
+    public void checkForElevatorUpdate() {
+
     }
     public ArrayList<ElevatorSchedulerData> getElevatorList(){
         return elevatorList;
