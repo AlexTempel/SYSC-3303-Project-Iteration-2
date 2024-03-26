@@ -13,6 +13,15 @@ Number of passengers
 Current Floor
 Broken State
 
+Console output should look like:
++----------+---------------+----------------------+-----------------+
+| Elevator | Current Floor | Number of Passengers | Alerts (Broken) |
++----------+---------------+----------------------+-----------------+
+| 1        | 7             | 3                    | No Alerts       |
+| 2        | 2             | 0                    | No Alerts       |
+| 3        | 17            | 37                   | Broken          |
+| 4        | 4             | 0                    | No Alerts       |
++----------+---------------+----------------------+-----------------+
 
 Instructions to Run
 If all on local computer. Run Main.java
