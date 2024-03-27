@@ -8,6 +8,7 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
     private int numberOfPassengers;
     private boolean upwards;
     private final int capacity;
+    private boolean broken;
 
     ElevatorSchedulerData(int socketNumber, InetAddress ipAddress) {
         currentFloor = 1;
@@ -16,6 +17,7 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
         this.socketNumber = socketNumber;
         this.ipAddress = ipAddress;
         capacity = 5;
+        broken = false;
     }
 
     ElevatorSchedulerData(ElevatorInfo info, int socketNumber, InetAddress ipAddress) {
@@ -26,9 +28,17 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
     }
 
     public void update(ElevatorInfo info) {
+        this.broken = info.isBroken();
         this.currentFloor = info.getFloor();
         this.upwards = info.goingUpwards();
         this.numberOfPassengers = info.getNumberOfPassengers();
+    }
+
+    public boolean isBroken() {
+        return broken;
+    }
+    public void setBroken(boolean broken) {
+        this.broken = broken;
     }
     public int getCapacity() {
         return capacity;
@@ -52,6 +62,14 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
 
     public int getNumberOfPassengers() {
         return numberOfPassengers;
+    }
+
+    public void incrementNumberOfPassengers() {
+        setNumberOfPassengers(getNumberOfPassengers() + 1);
+    }
+
+    public void decrementNumberOfPassengers() {
+        setNumberOfPassengers(getNumberOfPassengers() - 1);
     }
 
     public void setNumberOfPassengers(int number) throws IllegalArgumentException {

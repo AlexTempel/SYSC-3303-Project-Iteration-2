@@ -203,9 +203,14 @@ public class SchedulerSubsystem implements Runnable {
         System.out.printf("Scheduler Current State: %s\n", currentState);
 
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
-        elevatorUpdateSocket.receive(receivePacket);
+        try {
+            elevatorUpdateSocket.receive(receivePacket);
+        } catch (SocketTimeoutException e) {
+            return;
+        }
 
         updateElevatorInfo(new ElevatorSchedulerData(ElevatorInfo.parsePacket(receivePacket), receivePacket.getPort(), receivePacket.getAddress()));
+        checkForElevatorUpdate();
     }
 
     public void updateElevatorInfo(ElevatorSchedulerData elevator) {
