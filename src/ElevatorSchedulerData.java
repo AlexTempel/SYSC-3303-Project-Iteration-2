@@ -48,6 +48,10 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
         return numberOfPassengers >= capacity;
     }
 
+    public boolean isEmpty() {
+        return numberOfPassengers == 0;
+    }
+
     public void setUpwards(boolean upwards) {
         this.upwards = upwards;
     }
@@ -66,10 +70,16 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
 
     public void incrementNumberOfPassengers() {
         setNumberOfPassengers(getNumberOfPassengers() + 1);
+        if (numberOfPassengers > capacity) {
+            numberOfPassengers = capacity;
+        }
     }
 
     public void decrementNumberOfPassengers() {
         setNumberOfPassengers(getNumberOfPassengers() - 1);
+        if (numberOfPassengers < 0) {
+            numberOfPassengers = 0;
+        }
     }
 
     public void setNumberOfPassengers(int number) throws IllegalArgumentException {

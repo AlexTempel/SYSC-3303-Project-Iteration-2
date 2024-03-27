@@ -5,9 +5,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 public class SchedTemp implements Runnable {
-
 
     /*
     Check for elevator updates
@@ -18,12 +18,12 @@ public class SchedTemp implements Runnable {
     Try to send pending requests to elevators
      */
 
-    private DatagramSocket requestSocket;
-    private DatagramSocket infoSocket;
-    private ArrayList<ElevatorSchedulerData> elevatorList;
-    private ArrayList<RequestWrapper> completeRequestList;
-    private ArrayList<RequestWrapper> outstandingRequestList;
-    private ArrayList<RequestWrapper> pendingRequestList;
+    private final DatagramSocket requestSocket;
+    private final DatagramSocket infoSocket;
+    private final ArrayList<ElevatorSchedulerData> elevatorList;
+    private final ArrayList<RequestWrapper> completeRequestList;
+    private final ArrayList<RequestWrapper> outstandingRequestList;
+    private final ArrayList<RequestWrapper> pendingRequestList;
 
     SchedTemp(int requestSocketPort, int infoSocketPort, ArrayList<ElevatorSchedulerData> elevators) throws SocketException {
         requestSocket = new DatagramSocket(requestSocketPort);
@@ -41,7 +41,7 @@ public class SchedTemp implements Runnable {
     /**
      * This method will receive elevator info updates from the elevators of their positions and then update the elevator list
      * It will keep calling itself if it does not time out, this ensures that if there are a bunch of pending updates they are all cleared
-     * @throws IOException
+     * @throws IOException if socket fails
      */
     public void checkForElevatorUpdates() throws IOException {
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
@@ -65,7 +65,8 @@ public class SchedTemp implements Runnable {
     public void updateElevators(ElevatorSchedulerData elevator) {
         for (ElevatorSchedulerData e : elevatorList) {
             if (e.compare(elevator)) {
-                e = elevator;
+                elevatorList.remove(e);
+                elevatorList.add(elevator);
                 return;
             }
         }
@@ -76,11 +77,11 @@ public class SchedTemp implements Runnable {
      * If they are complete remove that request from the list of outstanding requests and update the elevator
      * If they are incomplete add it to the list of outstanding requests and pending requests
      */
-    public void checkForRequests() {
+    public void checkForRequests() throws IOException {
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         try {
             requestSocket.receive(receivePacket);
-        } catch (Exception e) {
+        } catch (SocketTimeoutException e) {
             return;
         }
 
@@ -112,6 +113,7 @@ public class SchedTemp implements Runnable {
             Add it to the list of outstanding requests
             Add it to the pending list of requests
              */
+            request.setElevator(null);
             outstandingRequestList.add(request);
             pendingRequestList.add(request);
             return;
@@ -160,7 +162,7 @@ public class SchedTemp implements Runnable {
          */
         ArrayList<ElevatorSchedulerData> notFullElevators = new ArrayList<>();
         for (ElevatorSchedulerData e : elevatorList) {
-            if (!e.isFull()) {
+            if (e.isEmpty()) {
                 notFullElevators.add(e);
             }
         }
@@ -175,7 +177,7 @@ public class SchedTemp implements Runnable {
                 if (e.isUpwards()) {
                     correctDirectionElevators.add(e);
                 }
-            } else { //If they are equal
+            } else if (e.isEmpty() && e.getCurrentFloor() == r.getRequest().getStartingFloor()){ //If an elevator is moving (not empty) then it can pick up passengers on that floor
                 correctDirectionElevators.add(e);
             }
         }
@@ -184,7 +186,7 @@ public class SchedTemp implements Runnable {
 
         if (!correctDirectionElevators.isEmpty()) {
             bestElevator  = findClosestElevator(correctDirectionElevators, r);
-        } else {
+        } else if (!notFullElevators.isEmpty()){
             bestElevator = findClosestElevator(notFullElevators, r);
         }
 
@@ -198,6 +200,7 @@ public class SchedTemp implements Runnable {
             DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
             requestSocket.send(sendPacket);
             requestSocket.disconnect();
+            bestElevator.incrementNumberOfPassengers();
             r.setElevator(bestElevator);
             return true;
         } catch (Exception e) {
@@ -231,14 +234,11 @@ public class SchedTemp implements Runnable {
         while (true) {
             try {
                 checkForElevatorUpdates();
+                checkForRequests();
             } catch (IOException e) {
                 continue;
             }
-            checkForRequests();
-
             clearPending();
-
-
         }
     }
 }
