@@ -5,215 +5,64 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.lang.Math;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeoutException;
 
 public class SchedulerSubsystem implements Runnable {
-    private final DatagramSocket mainSocket;
-    private final DatagramSocket elevatorUpdateSocket;
-    private final ArrayList<ElevatorSchedulerData> elevatorList;
-    private final ArrayList<Request> pendingRequestList;
-    private final ArrayList<Request> outstandingRequestList;
-    private enum state {
-        CHECKING_FOR_REQUEST,
-        CHECKING_FOR_ELEVATOR_UPDATE,
-        HANDLING_REQUEST,
-        CLEARING_PENDING,
-        SENDING_REQUEST
-    }
-    private Enum<state> currentState;
 
-    SchedulerSubsystem(int mainPort, int elevatorCommunicationPort, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
-        currentState = state.CHECKING_FOR_REQUEST;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
-        this.elevatorList = elevatorList;
+    /*
+    Check for elevator updates
+    Update Elevator's info
+    Check for requests
+    If it is a complete request, update elevator, add it to complete request list
+    If it is a new request put it in pending list and outstanding list
+    Try to send pending requests to elevators
+     */
+
+    private final DatagramSocket requestSocket;
+    private final DatagramSocket infoSocket;
+    private final ArrayList<ElevatorSchedulerData> elevatorList;
+    private final ArrayList<RequestWrapper> completeRequestList;
+    private final ArrayList<RequestWrapper> outstandingRequestList;
+    private final ArrayList<RequestWrapper> pendingRequestList;
+
+    SchedulerSubsystem(int requestSocketPort, int infoSocketPort, ArrayList<ElevatorSchedulerData> elevators) throws SocketException {
+        requestSocket = new DatagramSocket(requestSocketPort);
+        requestSocket.setSoTimeout(10);
+        infoSocket = new DatagramSocket(infoSocketPort);
+        infoSocket.setSoTimeout(10);
+
+        completeRequestList = new ArrayList<>();
         outstandingRequestList = new ArrayList<>();
         pendingRequestList = new ArrayList<>();
 
-        mainSocket = new DatagramSocket(mainPort);
-        mainSocket.setSoTimeout(100);
-        elevatorUpdateSocket = new DatagramSocket(elevatorCommunicationPort);
-        elevatorUpdateSocket.setSoTimeout(100);
-    }
-
-    SchedulerSubsystem(int port, int elevatorCommunicationPort, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
-        this.elevatorList = elevatorList;
-        this.outstandingRequestList = outstandingRequestList;
-        pendingRequestList = new ArrayList<>();
-
-        mainSocket = new DatagramSocket(port);
-        elevatorUpdateSocket = new DatagramSocket(elevatorCommunicationPort);
+        elevatorList = elevators;
     }
 
     /**
-     * Gets a packet from the socket and puts its data in a RequestWrapper
-     * @return RequestWrapper of the data packet
-     * @throws IOException if it cannot receive on socket for some reason
+     * This method will receive elevator info updates from the elevators of their positions and then update the elevator list
+     * It will keep calling itself if it does not time out, this ensures that if there are a bunch of pending updates they are all cleared
+     * @throws IOException if socket fails
      */
-    public RequestWrapper getRequestFromInternet() throws IOException {
-        currentState = state.CHECKING_FOR_REQUEST;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
+    public void checkForElevatorUpdates() throws IOException {
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         try {
-            mainSocket.receive(receivePacket);
-        } catch (SocketTimeoutException e) {
-            return null;
-        }
-
-        return new RequestWrapper(Request.parsePacket(receivePacket), new ElevatorSchedulerData(receivePacket.getPort(), receivePacket.getAddress()));
-    }
-
-    /**
-     * Updates the location of an elevator once it sends a message saying it has completed a request
-     * @param request the data from a packet to update the elevator with
-     */
-    private void updateElevatorList(RequestWrapper request) {
-        for (ElevatorSchedulerData e : elevatorList) {
-            if (e.compare(request.getElevator())) {
-                e.setCurrentFloor(request.getRequest().getDestinationFloor());
-                e.setNumberOfPassengers(e.getNumberOfPassengers() - 1);
-
-                System.out.println("Scheduler received request from elevator " + (elevatorList.indexOf(e) + 1));
-                return;
-            }
-        }
-    }
-
-    /**
-     * Do what needs to be done with a message from the internet
-     * If it is a request that is marked complete, delete that request from the list of outstanding requests and update the elevator position that handled that request
-     * If it is not marked complete, add it to the list of outstanding requests another method will handle delegating those requests
-     * @param request the new message from the internet
-     */
-    public void dealWithNewRequest(RequestWrapper request) {
-        currentState = state.HANDLING_REQUEST;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
-
-        if (request.getRequest().isFinished()) { //If the request says it is done
-            for (Request r : outstandingRequestList) { //Remove that request from the list of requests
-                if (request.getRequest().getRequestID() == r.getRequestID()) { //Two requests are the same if they have the same requestID
-                    outstandingRequestList.remove(r); //Remove it from the list of outstanding requests
-                    updateElevatorList(request); //Update the record of the elevator to be in that location
-                    return;
-                }
-            }
-        } else { //If it isn't a complete request add it to the list of outstanding requests
-            outstandingRequestList.add(request.getRequest());
-            pendingRequestList.add(request.getRequest());
-            System.out.println("Scheduler received request from floor");
-        }
-    }
-
-    /**
-     * Method to send a request to an elevator
-     * @param request Request to be sent to the elevator
-     * @param elevator Elevator to send request to
-     * @throws IOException If there is an error sending the packet
-     */
-    public void sendRequestToElevator(Request request, ElevatorSchedulerData elevator) throws IOException {
-        currentState = state.SENDING_REQUEST;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
-        String message = request.convertToPacketMessage();
-        DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
-
-        mainSocket.connect(elevator.getIpAddress(), elevator.getSocketNumber());
-        mainSocket.send(sendPacket);
-        mainSocket.disconnect();
-
-        elevator.incrementNumberOfPassengers();
-
-        System.out.println("Scheduler sent request to elevator " + (elevatorList.indexOf(elevator) + 1));
-    }
-
-    public void run() {
-        System.out.println("Scheduler Starting");
-
-        RequestWrapper currentRequest;
-        while (true) {
-            try {
-                currentRequest = getRequestFromInternet();
-                checkForElevatorUpdate();
-            } catch (IOException e) { //If there's an error getting a request from the internet loop back again
-                continue;
-            }
-            if (currentRequest != null) {
-                dealWithNewRequest(currentRequest);
-            }
-            checkPending();
-        }
-
-        /*
-        1. Check for incoming requests
-            If there is a request decode it
-                If it is a new request add it to the list of outstanding requests and pending requests. Give it a timestamp.
-                If it is a complete request remove it from the list of outstanding requests and update the elevator
-        2. Check for incoming elevator updates
-            If there is an update, update the elevator info
-        3. Delegate the pending tasks.
-         */
-
-
-    }
-
-    /**
-     * Checks if any pending requests can be sent. If so check the next one
-     */
-    public void checkPending() {
-        currentState = state.CLEARING_PENDING;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
-        try {
-            if (selectElevator(pendingRequestList.getFirst())) {
-                checkPending();
-            }
-        } catch (NoSuchElementException e) {}
-    }
-
-    /**
-     * first checks for free elevator, if not exit, then if it has a free
-     * Selects the closeted elevator to the requested floor, and removes the
-     * request from pending
-     * @param request
-     */
-    public boolean selectElevator(Request request) {
-        int smallestDifference = 100000;
-        ElevatorSchedulerData closestElevator = null;
-        for (ElevatorSchedulerData e : elevatorList) {
-            if (!e.isFull()) {
-                if (smallestDifference >= Math.abs(e.getCurrentFloor() - request.getStartingFloor())) {
-                    smallestDifference = Math.abs(e.getCurrentFloor() - request.getStartingFloor());
-                    closestElevator = e;
-                }
-            }
-        }
-        if (closestElevator != null) {
-            try {
-                sendRequestToElevator(request, closestElevator);
-                pendingRequestList.removeFirst();
-                return true;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return false;
-    }
-
-    public void checkForElevatorUpdate() throws IOException {
-        currentState = state.CHECKING_FOR_ELEVATOR_UPDATE;
-        System.out.printf("Scheduler Current State: %s\n", currentState);
-
-        DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
-        try {
-            elevatorUpdateSocket.receive(receivePacket);
+            infoSocket.receive(receivePacket);
         } catch (SocketTimeoutException e) {
             return;
         }
 
-        updateElevatorInfo(new ElevatorSchedulerData(ElevatorInfo.parsePacket(receivePacket), receivePacket.getPort(), receivePacket.getAddress()));
-        checkForElevatorUpdate();
+        //Update ElevatorList
+        updateElevators(new ElevatorSchedulerData(ElevatorInfo.parsePacket(receivePacket), receivePacket.getPort(), receivePacket.getAddress()));
+        //Call this again
+        //Recursively calling it again makes sure any pending updates get dealt with before sending any new requests out
+        checkForElevatorUpdates();
     }
 
-    public void updateElevatorInfo(ElevatorSchedulerData elevator) {
+    /**
+     * Updates the elevator list with the status of the elevator
+     * @param elevator the Elevator object to update the list with
+     */
+    public void updateElevators(ElevatorSchedulerData elevator) {
         for (ElevatorSchedulerData e : elevatorList) {
             if (e.compare(elevator)) {
                 elevatorList.remove(e);
@@ -223,15 +72,189 @@ public class SchedulerSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Check the socket for any requests
+     * If they are complete remove that request from the list of outstanding requests and update the elevator
+     * If they are incomplete add it to the list of outstanding requests and pending requests
+     */
+    public void checkForRequests() throws IOException {
+        DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
+        try {
+            requestSocket.receive(receivePacket);
+        } catch (SocketTimeoutException e) {
+            return;
+        }
+
+        RequestWrapper request = new RequestWrapper(Request.parsePacket(receivePacket), findElevator(receivePacket.getPort()));
+        if (request.getRequest().isFinished()) {
+            //Remove request from list of outstanding requests
+            for (RequestWrapper r : outstandingRequestList) {
+                if (r.getRequest().getRequestID() == request.getRequest().getRequestID()) {
+                    //Set finished time
+                    r.complete();
+                    //Add it to the list of complete requests
+                    completeRequestList.add(r);
+                    //Remove it from the list of outstanding requests
+                    outstandingRequestList.remove(r);
+                    //Decrease the number of passengers (Assuming one passenger per request
+                    request.getElevator().decrementNumberOfPassengers();
+                    //Set the floor to the destination floor
+                    request.getElevator().setCurrentFloor(request.getRequest().getDestinationFloor());
+                    return;
+                }
+            }
+            /*
+            Remove from outstanding request list
+            Add to complete request list
+            Update Elevator
+             */
+        } else { //If it is not complete
+            /*
+            Add it to the list of outstanding requests
+            Add it to the pending list of requests
+             */
+            request.setElevator(null);
+            outstandingRequestList.add(request);
+            pendingRequestList.add(request);
+            return;
+        }
+    }
+
+    /**
+     * Find the elevator that has this port number
+     * @param portNumber port of the elevator you are trying to find
+     * @return the elevator object from elevator list that matches that port number
+     */
+    public ElevatorSchedulerData findElevator(int portNumber) {
+        for (ElevatorSchedulerData e : elevatorList) {
+            if (e.getSocketNumber() == portNumber) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Try to send all the pending messages to elevators
+     * If you can send one try with the next until you can't send any or the list is empty
+     */
+    public void clearPending() {
+        if (pendingRequestList.isEmpty()) {
+            return;
+        }
+        if (selectElevator(pendingRequestList.getFirst())) {
+            pendingRequestList.removeFirst();
+            clearPending();
+        }
+    }
+
+    /**
+     * Select and send to the best elevator for this request
+     * @param r The request to be sent
+     * @return If request was successfully sent
+     */
+    public boolean selectElevator(RequestWrapper r) {
+        /*
+        Criteria for best elevator
+        Not at capacity
+        Going in right direction (if it is empty direction doesn't matter since it should not be moving)
+        Closest
+         */
+        ArrayList<ElevatorSchedulerData> notFullElevators = new ArrayList<>();
+        for (ElevatorSchedulerData e : elevatorList) {
+            if (e.isEmpty()) {
+                notFullElevators.add(e);
+            }
+        }
+
+        ArrayList<ElevatorSchedulerData> correctDirectionElevators = new ArrayList<>();
+        for (ElevatorSchedulerData e : notFullElevators) {
+            if (e.getCurrentFloor() > r.getRequest().getStartingFloor()) {
+                if (e.isDownwards()) {
+                    correctDirectionElevators.add(e);
+                }
+            } else if (e.getCurrentFloor() < r.getRequest().getStartingFloor()) {
+                if (e.isUpwards()) {
+                    correctDirectionElevators.add(e);
+                }
+            } else if (e.isEmpty() && e.getCurrentFloor() == r.getRequest().getStartingFloor()){ //If an elevator is moving (not empty) then it can pick up passengers on that floor
+                correctDirectionElevators.add(e);
+            }
+        }
+
+        ElevatorSchedulerData bestElevator = null;
+
+        if (!correctDirectionElevators.isEmpty()) {
+            bestElevator  = findClosestElevator(correctDirectionElevators, r);
+        } else if (!notFullElevators.isEmpty()){
+            bestElevator = findClosestElevator(notFullElevators, r);
+        }
+
+        if (bestElevator == null) {
+            return false;
+        }
+
+        try {
+            requestSocket.connect(bestElevator.getIpAddress(), bestElevator.getSocketNumber());
+            String message = r.getRequest().convertToPacketMessage();
+            DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
+            requestSocket.send(sendPacket);
+            requestSocket.disconnect();
+            bestElevator.incrementNumberOfPassengers();
+            r.setElevator(bestElevator);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Finds the elevator that is the closest to the starting floor of the request
+     * @param elevators List of elevators to check
+     * @param r Request to check
+     * @return The elevator that is the closest, null if none of them are
+     */
+    public ElevatorSchedulerData findClosestElevator(ArrayList<ElevatorSchedulerData> elevators,  RequestWrapper r) {
+        if (elevators.isEmpty()) {
+            return null;
+        }
+        ElevatorSchedulerData returnElevator = null;
+        int smallestDifference = Math.abs(elevators.getFirst().getCurrentFloor() - r.getRequest().getStartingFloor());
+        for (ElevatorSchedulerData e : elevators) {
+            if (smallestDifference >= Math.abs(e.getCurrentFloor() - r.getRequest().getStartingFloor())) {
+                smallestDifference = Math.abs(e.getCurrentFloor() - r.getRequest().getStartingFloor());
+                returnElevator = e;
+            }
+        }
+        return returnElevator;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                checkForElevatorUpdates();
+                checkForRequests();
+            } catch (IOException e) {
+                continue;
+            }
+            clearPending();
+        }
+    }
+
     public ArrayList<ElevatorSchedulerData> getElevatorList() {
         return elevatorList;
     }
 
-    public ArrayList<Request> getOutstandingRequestList() {
+    public ArrayList<RequestWrapper> getCompleteRequestList() {
+        return completeRequestList;
+    }
+
+    public ArrayList<RequestWrapper> getOutstandingRequestList() {
         return outstandingRequestList;
     }
 
-    public ArrayList<Request> getPendingRequestList() {
+    public ArrayList<RequestWrapper> getPendingRequestList() {
         return pendingRequestList;
     }
 }

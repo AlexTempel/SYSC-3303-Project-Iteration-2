@@ -35,7 +35,8 @@ public class Main {
             elevators.add(new ElevatorSchedulerData(elevator4Port, elevator4IP));
 
             int schedulerPort = 19509;
-            SchedulerSubsystem scheduler = new SchedulerSubsystem(schedulerPort, elevators);
+            int infoPort = 19510;
+            SchedulerSubsystem scheduler = new SchedulerSubsystem(schedulerPort, infoPort, elevators);
 
             Thread schedulerThread = new Thread(scheduler);
 
