@@ -1,9 +1,12 @@
+import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.rmi.server.ExportException;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +17,6 @@ class SchedulerSubsystemTest {
     void checkForElevatorUpdates() {
         int schedulerRequestPort = 19999;
         int schedulerInfoPort = 19998;
-
 
         int elevator1Port = 10001;
         int elevator2Port = 10002;
@@ -37,16 +39,22 @@ class SchedulerSubsystemTest {
         boolean testDirection = true;
         boolean testBroken = true;
         DatagramPacket testPacket = (new ElevatorInfo(testFloor, testNumberOfPassengers, testDirection, testBroken)).convertToPacket();
+        assertNotNull(testPacket);
+        System.out.println("1");
 
         try {
             SchedulerSubsystem testScheduler = new SchedulerSubsystem(schedulerRequestPort, schedulerInfoPort, initialElevatorList);
             DatagramSocket testSocket = new DatagramSocket(elevator2Port);
+            System.out.println("2");
 
             testSocket.connect(InetAddress.getLoopbackAddress(), schedulerInfoPort);
             testSocket.send(testPacket);
             testSocket.disconnect();
 
+            System.out.println("3");
+
             testScheduler.checkForElevatorUpdates();
+            System.out.println("4");
 
             ElevatorSchedulerData elevatorTested = null;
             for (ElevatorSchedulerData e : initialElevatorList) {
@@ -56,38 +64,147 @@ class SchedulerSubsystemTest {
                 }
             }
 
+            System.out.println("5");
             assertEquals(elevatorTested.isBroken(), testBroken);
             assertEquals(elevatorTested.getCurrentFloor(), testFloor);
             assertEquals(elevatorTested.getNumberOfPassengers(), testNumberOfPassengers);
             assertEquals(elevatorTested.isUpwards(), testBroken);
 
         } catch (Exception e) {
-            return;
+            e.printStackTrace();
+            fail();
         }
     }
 
+
     @Test
     void updateElevators() {
+        int schedulerRequestPort = 19999;
+        int schedulerInfoPort = 19998;
+
+        int elevator1Port = 10001;
+        int elevator2Port = 10002;
+        int elevator3Port = 10003;
+        int elevator4Port = 10004;
+        ElevatorSchedulerData elevator1 = new ElevatorSchedulerData(elevator1Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator2 = new ElevatorSchedulerData(elevator2Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator3 = new ElevatorSchedulerData(elevator3Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator4 = new ElevatorSchedulerData(elevator4Port, InetAddress.getLoopbackAddress());
+
+        ArrayList<ElevatorSchedulerData> initialElevatorList = new ArrayList<>();
+        initialElevatorList.add(elevator1);
+        initialElevatorList.add(elevator2);
+        initialElevatorList.add(elevator3);
+        initialElevatorList.add(elevator4);
+
+        int testFloor = 10;
+        int testNumberOfPassengers = 3;
+        boolean testDirection = true;
+        boolean testBroken = true;
+        ElevatorSchedulerData testElevator = new ElevatorSchedulerData(elevator2Port, InetAddress.getLoopbackAddress());
+        testElevator.setCurrentFloor(10);
+        testElevator.setUpwards(testDirection);
+        testElevator.setNumberOfPassengers(testNumberOfPassengers);
+        testElevator.setBroken(testBroken);
+
+        try {
+            SchedulerSubsystem testSubsystem = new SchedulerSubsystem(schedulerRequestPort, schedulerInfoPort, initialElevatorList);
+            //Try with an existing elevator
+            testSubsystem.updateElevators(testElevator);
+
+            assertFalse(initialElevatorList.contains(elevator2));
+            assertTrue(initialElevatorList.contains(testElevator));
+
+            //Try with a new elevator not in list
+            ElevatorSchedulerData secondTestElevator = new ElevatorSchedulerData(10005, InetAddress.getLoopbackAddress());
+            secondTestElevator.setBroken(true);
+
+            testSubsystem.updateElevators(secondTestElevator);
+
+            assertFalse(initialElevatorList.contains(secondTestElevator));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
 
     }
 
     @Test
     void checkForRequests() {
+
     }
 
     @Test
     void findElevator() {
+        int schedulerRequestPort = 19999;
+        int schedulerInfoPort = 19998;
+
+        int elevator1Port = 10001;
+        int elevator2Port = 10002;
+        int elevator3Port = 10003;
+        int elevator4Port = 10004;
+        ElevatorSchedulerData elevator1 = new ElevatorSchedulerData(elevator1Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator2 = new ElevatorSchedulerData(elevator2Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator3 = new ElevatorSchedulerData(elevator3Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator4 = new ElevatorSchedulerData(elevator4Port, InetAddress.getLoopbackAddress());
+
+        ArrayList<ElevatorSchedulerData> initialElevatorList = new ArrayList<>();
+        initialElevatorList.add(elevator1);
+        initialElevatorList.add(elevator2);
+        initialElevatorList.add(elevator3);
+        initialElevatorList.add(elevator4);
+
+        try {
+            SchedulerSubsystem testScheduler = new SchedulerSubsystem(schedulerRequestPort, schedulerInfoPort, initialElevatorList);
+
+            //Try with elevator that is in there
+            assertEquals(elevator1, testScheduler.findElevator(elevator1Port));
+
+            //Try with an elevator not in there
+            assertNull(testScheduler.findElevator(12));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     void clearPending() {
+
     }
 
     @Test
     void selectElevator() {
+
     }
 
     @Test
     void findClosestElevator() {
+        int schedulerRequestPort = 19999;
+        int schedulerInfoPort = 19998;
+
+        int elevator1Port = 10001;
+        int elevator2Port = 10002;
+        int elevator3Port = 10003;
+        int elevator4Port = 10004;
+        ElevatorSchedulerData elevator1 = new ElevatorSchedulerData(elevator1Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator2 = new ElevatorSchedulerData(elevator2Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator3 = new ElevatorSchedulerData(elevator3Port, InetAddress.getLoopbackAddress());
+        ElevatorSchedulerData elevator4 = new ElevatorSchedulerData(elevator4Port, InetAddress.getLoopbackAddress());
+
+        ArrayList<ElevatorSchedulerData> initialElevatorList = new ArrayList<>();
+        initialElevatorList.add(elevator1);
+        initialElevatorList.add(elevator2);
+        initialElevatorList.add(elevator3);
+        initialElevatorList.add(elevator4);
+
+        try {
+            SchedulerSubsystem testScheduler = new SchedulerSubsystem(schedulerRequestPort, schedulerInfoPort, initialElevatorList);
+
+            RequestWrapper testRequest = new RequestWrapper(new Request(2, 5, 7), null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 }
