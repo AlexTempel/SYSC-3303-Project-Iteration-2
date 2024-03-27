@@ -7,6 +7,7 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
     private final InetAddress ipAddress;
     private int numberOfPassengers;
     private boolean upwards;
+    private final int capacity;
 
     ElevatorSchedulerData(int socketNumber, InetAddress ipAddress) {
         currentFloor = 1;
@@ -14,12 +15,27 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
         upwards = true;
         this.socketNumber = socketNumber;
         this.ipAddress = ipAddress;
+        capacity = 5;
+    }
+
+    ElevatorSchedulerData(ElevatorInfo info, int socketNumber, InetAddress ipAddress) {
+        this.update(info);
+        this.socketNumber = socketNumber;
+        this.ipAddress = ipAddress;
+        this.capacity = 5;
     }
 
     public void update(ElevatorInfo info) {
         this.currentFloor = info.getFloor();
         this.upwards = info.goingUpwards();
         this.numberOfPassengers = info.getNumberOfPassengers();
+    }
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public boolean isFull() {
+        return numberOfPassengers >= capacity;
     }
 
     public void setUpwards(boolean upwards) {
@@ -38,7 +54,10 @@ public class ElevatorSchedulerData { //Meant only for Scheduler
         return numberOfPassengers;
     }
 
-    public void setNumberOfPassengers(int number) {
+    public void setNumberOfPassengers(int number) throws IllegalArgumentException {
+        if (number < 0 || number > capacity) {
+            throw new IllegalArgumentException("Number of passengers must be 0 or more and less than capacity");
+        }
         numberOfPassengers = number;
     }
 

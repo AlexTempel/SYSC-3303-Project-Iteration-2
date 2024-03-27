@@ -2,10 +2,12 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.lang.Math;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeoutException;
 
 public class SchedulerSubsystem implements Runnable {
     private final DatagramSocket mainSocket;
@@ -14,7 +16,8 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<Request> pendingRequestList;
     private final ArrayList<Request> outstandingRequestList;
     private enum state {
-        WAITING,
+        CHECKING_FOR_REQUEST,
+        CHECKING_FOR_ELEVATOR_UPDATE,
         HANDLING_REQUEST,
         CLEARING_PENDING,
         SENDING_REQUEST
@@ -22,23 +25,25 @@ public class SchedulerSubsystem implements Runnable {
     private Enum<state> currentState;
 
     SchedulerSubsystem(int mainPort, int elevatorCommunicationPort, ArrayList<ElevatorSchedulerData> elevatorList) throws SocketException {
-        currentState = state.WAITING;
+        currentState = state.CHECKING_FOR_REQUEST;
         System.out.printf("Scheduler Current State: %s\n", currentState);
         this.elevatorList = elevatorList;
         outstandingRequestList = new ArrayList<>();
         pendingRequestList = new ArrayList<>();
 
         mainSocket = new DatagramSocket(mainPort);
+        mainSocket.setSoTimeout(100);
         elevatorUpdateSocket = new DatagramSocket(elevatorCommunicationPort);
+        elevatorUpdateSocket.setSoTimeout(100);
     }
 
-    SchedulerSubsystem(int port, int elevatorCommuncationPort, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
+    SchedulerSubsystem(int port, int elevatorCommunicationPort, ArrayList<ElevatorSchedulerData> elevatorList, ArrayList<Request> outstandingRequestList) throws SocketException {
         this.elevatorList = elevatorList;
         this.outstandingRequestList = outstandingRequestList;
         pendingRequestList = new ArrayList<>();
 
         mainSocket = new DatagramSocket(port);
-        elevatorUpdateSocket = new DatagramSocket(elevatorCommuncationPort);
+        elevatorUpdateSocket = new DatagramSocket(elevatorCommunicationPort);
     }
 
     /**
@@ -47,10 +52,14 @@ public class SchedulerSubsystem implements Runnable {
      * @throws IOException if it cannot receive on socket for some reason
      */
     public RequestWrapper getRequestFromInternet() throws IOException {
-        currentState = state.WAITING;
+        currentState = state.CHECKING_FOR_REQUEST;
         System.out.printf("Scheduler Current State: %s\n", currentState);
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
-        mainSocket.receive(receivePacket);
+        try {
+            mainSocket.receive(receivePacket);
+        } catch (SocketTimeoutException e) {
+            return null;
+        }
 
         return new RequestWrapper(Request.parsePacket(receivePacket), new ElevatorSchedulerData(receivePacket.getPort(), receivePacket.getAddress()));
     }
@@ -63,7 +72,7 @@ public class SchedulerSubsystem implements Runnable {
         for (ElevatorSchedulerData e : elevatorList) {
             if (e.compare(request.getElevator())) {
                 e.setCurrentFloor(request.getRequest().getDestinationFloor());
-                e.setInUse(false);
+                e.setNumberOfPassengers(e.getNumberOfPassengers() - 1);
 
                 System.out.println("Scheduler received request from elevator " + (elevatorList.indexOf(e) + 1));
                 return;
@@ -80,6 +89,7 @@ public class SchedulerSubsystem implements Runnable {
     public void dealWithNewRequest(RequestWrapper request) {
         currentState = state.HANDLING_REQUEST;
         System.out.printf("Scheduler Current State: %s\n", currentState);
+
         if (request.getRequest().isFinished()) { //If the request says it is done
             for (Request r : outstandingRequestList) { //Remove that request from the list of requests
                 if (request.getRequest().getRequestID() == r.getRequestID()) { //Two requests are the same if they have the same requestID
@@ -123,10 +133,13 @@ public class SchedulerSubsystem implements Runnable {
         while (true) {
             try {
                 currentRequest = getRequestFromInternet();
+                checkForElevatorUpdate();
             } catch (IOException e) { //If there's an error getting a request from the internet loop back again
                 continue;
             }
-            dealWithNewRequest(currentRequest);
+            if (currentRequest != null) {
+                dealWithNewRequest(currentRequest);
+            }
             checkPending();
         }
 
@@ -185,10 +198,27 @@ public class SchedulerSubsystem implements Runnable {
         return false;
     }
 
-    public void checkForElevatorUpdate() {
+    public void checkForElevatorUpdate() throws IOException {
+        currentState = state.CHECKING_FOR_ELEVATOR_UPDATE;
+        System.out.printf("Scheduler Current State: %s\n", currentState);
 
+        DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
+        elevatorUpdateSocket.receive(receivePacket);
+
+        updateElevatorInfo(new ElevatorSchedulerData(ElevatorInfo.parsePacket(receivePacket), receivePacket.getPort(), receivePacket.getAddress()));
     }
-    public ArrayList<ElevatorSchedulerData> getElevatorList(){
+
+    public void updateElevatorInfo(ElevatorSchedulerData elevator) {
+        for (ElevatorSchedulerData e : elevatorList) {
+            if (e.compare(elevator)) {
+                elevatorList.remove(e);
+                elevatorList.add(elevator);
+                return;
+            }
+        }
+    }
+
+    public ArrayList<ElevatorSchedulerData> getElevatorList() {
         return elevatorList;
     }
 
