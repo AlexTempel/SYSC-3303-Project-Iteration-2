@@ -153,6 +153,10 @@ public class SchedulerSubsystem implements Runnable {
      * @param r The request to be sent
      * @return If request was successfully sent
      */
+    /*
+    TODO The direction of the request needs to be taken account for too.
+    So the elevator needs to be heading in the same direction as the request and be bellow/above the starting floor for its direction
+     */
     public boolean selectElevator(RequestWrapper r) {
         /*
         Criteria for best elevator
