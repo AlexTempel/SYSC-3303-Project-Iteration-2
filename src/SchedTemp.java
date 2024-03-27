@@ -198,14 +198,19 @@ public class SchedTemp implements Runnable {
             DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
             requestSocket.send(sendPacket);
             requestSocket.disconnect();
+            r.setElevator(bestElevator);
+            return true;
         } catch (Exception e) {
             return false;
         }
-
-        return true;
-
     }
 
+    /**
+     * Finds the elevator that is the closest to the starting floor of the request
+     * @param elevators List of elevators to check
+     * @param r Request to check
+     * @return The elevator that is the closest, null if none of them are
+     */
     public ElevatorSchedulerData findClosestElevator(ArrayList<ElevatorSchedulerData> elevators,  RequestWrapper r) {
         if (elevators.isEmpty()) {
             return null;

@@ -3,8 +3,8 @@ import java.time.LocalDateTime;
 
 public class RequestWrapper { //Meant only for scheduler
     //Combines the request data and Elevator data
-    private final Request request;
-    private final ElevatorSchedulerData elevator;
+    private Request request;
+    private ElevatorSchedulerData elevator;
     private final LocalDateTime receiveTime;
     private LocalDateTime completetionTime;
 
@@ -28,5 +28,13 @@ public class RequestWrapper { //Meant only for scheduler
     }
     public ElevatorSchedulerData getElevator() {
         return elevator;
+    }
+
+    public void setRequest(Request r) {
+        this.request = r;
+    }
+
+    public void setElevator(ElevatorSchedulerData e) {
+        this.elevator = e;
     }
 }

@@ -121,7 +121,7 @@ public class SchedulerSubsystem implements Runnable {
         mainSocket.send(sendPacket);
         mainSocket.disconnect();
 
-        elevator.setInUse(true);
+        elevator.incrementNumberOfPassengers();
 
         System.out.println("Scheduler sent request to elevator " + (elevatorList.indexOf(elevator) + 1));
     }
@@ -179,7 +179,7 @@ public class SchedulerSubsystem implements Runnable {
         int smallestDifference = 100000;
         ElevatorSchedulerData closestElevator = null;
         for (ElevatorSchedulerData e : elevatorList) {
-            if (!e.getInUse()) {
+            if (!e.isFull()) {
                 if (smallestDifference >= Math.abs(e.getCurrentFloor() - request.getStartingFloor())) {
                     smallestDifference = Math.abs(e.getCurrentFloor() - request.getStartingFloor());
                     closestElevator = e;
