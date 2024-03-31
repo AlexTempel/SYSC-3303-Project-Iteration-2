@@ -153,10 +153,6 @@ public class SchedulerSubsystem implements Runnable {
      * @param r The request to be sent
      * @return If request was successfully sent
      */
-    /*
-    TODO The direction of the request needs to be taken account for too.
-    So the elevator needs to be heading in the same direction as the request and be bellow/above the starting floor for its direction
-     */
     public boolean selectElevator(RequestWrapper r) {
         /*
         Criteria for best elevator
@@ -164,6 +160,8 @@ public class SchedulerSubsystem implements Runnable {
         Going in right direction (if it is empty direction doesn't matter since it should not be moving)
         Closest
          */
+
+        //If the elevator isn't full
         ArrayList<ElevatorSchedulerData> notFullElevators = new ArrayList<>();
         for (ElevatorSchedulerData e : elevatorList) {
             if (e.isEmpty()) {
@@ -171,6 +169,7 @@ public class SchedulerSubsystem implements Runnable {
             }
         }
 
+        //If the elevator is going in the direction of the starting floor of the request
         ArrayList<ElevatorSchedulerData> correctDirectionElevators = new ArrayList<>();
         for (ElevatorSchedulerData e : notFullElevators) {
             if (e.getCurrentFloor() > r.getRequest().getStartingFloor()) {
@@ -186,9 +185,27 @@ public class SchedulerSubsystem implements Runnable {
             }
         }
 
+        //If the elevator is going in the same direction as the request and is heading towards the starting floor
+        boolean requestDirectionUp;
+        if (r.getRequest().getStartingFloor() > r.getRequest().getDestinationFloor()) {
+            requestDirectionUp = false;
+        } else {
+            requestDirectionUp = true;
+        }
+        ArrayList<ElevatorSchedulerData> sameDirectionElevators = new ArrayList<>();
+        for (ElevatorSchedulerData e : notFullElevators) {
+            if (requestDirectionUp && e.isUpwards() && e.getCurrentFloor() < r.getRequest().getStartingFloor()) {
+                sameDirectionElevators.add(e);
+            } else if (!requestDirectionUp && e.isDownwards() && e.getCurrentFloor() > r.getRequest().getStartingFloor()) {
+                sameDirectionElevators.add(e);
+            }
+        }
+
         ElevatorSchedulerData bestElevator = null;
 
-        if (!correctDirectionElevators.isEmpty()) {
+        if (!sameDirectionElevators.isEmpty()) {
+            bestElevator = findClosestElevator(sameDirectionElevators, r);
+        } else if (!correctDirectionElevators.isEmpty()) {
             bestElevator  = findClosestElevator(correctDirectionElevators, r);
         } else if (!notFullElevators.isEmpty()){
             bestElevator = findClosestElevator(notFullElevators, r);
