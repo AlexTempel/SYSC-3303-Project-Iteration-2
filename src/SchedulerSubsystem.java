@@ -229,6 +229,8 @@ public class SchedulerSubsystem implements Runnable {
             return false;
         }
 
+        //Send request to best elevator
+
         try {
             currentState = SchedulerState.SENDING;
 
@@ -266,6 +268,13 @@ public class SchedulerSubsystem implements Runnable {
         return returnElevator;
     }
 
+    /**
+     * Console output of system's current state, should look like prototype in README
+     */
+    public void outputConsole() {
+        System.out.println("I am the console output");
+    }
+
     @Override
     public void run() {
         while (true) {
@@ -276,6 +285,7 @@ public class SchedulerSubsystem implements Runnable {
                 continue;
             }
             clearPending();
+            outputConsole();
         }
     }
 

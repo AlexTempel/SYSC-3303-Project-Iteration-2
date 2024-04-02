@@ -22,6 +22,9 @@ Console output should look like:
 | 3        | 17            | 37                   | Broken          |
 | 4        | 4             | 0                    | No Alerts       |
 +----------+---------------+----------------------+-----------------+
+|Average Time to service request = 15 seconds                       |
+|Number of Requests Serviced = 12                                   |
++-------------------------------------------------------------------+
 
 Instructions to Run
 If all on local computer. Run Main.java
