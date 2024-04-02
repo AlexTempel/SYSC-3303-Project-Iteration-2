@@ -5,7 +5,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.concurrent.TimeoutException;
 
 public class SchedulerSubsystem implements Runnable {
 
@@ -25,7 +24,17 @@ public class SchedulerSubsystem implements Runnable {
     private final ArrayList<RequestWrapper> outstandingRequestList;
     private final ArrayList<RequestWrapper> pendingRequestList;
 
+    private enum SchedulerState {
+        RECEIVING,
+        UPDATINGINFO,
+        SENDING
+    }
+
+    private SchedulerState currentState;
+
     SchedulerSubsystem(int requestSocketPort, int infoSocketPort, ArrayList<ElevatorSchedulerData> elevators) throws SocketException {
+        currentState = SchedulerState.RECEIVING;
+
         requestSocket = new DatagramSocket(requestSocketPort);
         requestSocket.setSoTimeout(10);
         infoSocket = new DatagramSocket(infoSocketPort);
@@ -44,6 +53,7 @@ public class SchedulerSubsystem implements Runnable {
      * @throws IOException if socket fails
      */
     public void checkForElevatorUpdates() throws IOException {
+        currentState = SchedulerState.RECEIVING;
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         try {
             infoSocket.receive(receivePacket);
@@ -63,6 +73,7 @@ public class SchedulerSubsystem implements Runnable {
      * @param elevator the Elevator object to update the list with
      */
     public void updateElevators(ElevatorSchedulerData elevator) {
+        currentState = SchedulerState.UPDATINGINFO;
         for (ElevatorSchedulerData e : elevatorList) {
             if (e.compare(elevator)) {
                 elevatorList.remove(e);
@@ -78,6 +89,7 @@ public class SchedulerSubsystem implements Runnable {
      * If they are incomplete add it to the list of outstanding requests and pending requests
      */
     public void checkForRequests() throws IOException {
+        currentState = SchedulerState.RECEIVING;
         DatagramPacket receivePacket = new DatagramPacket(new byte[1024], 1024);
         try {
             requestSocket.receive(receivePacket);
@@ -90,6 +102,7 @@ public class SchedulerSubsystem implements Runnable {
             //Remove request from list of outstanding requests
             for (RequestWrapper r : outstandingRequestList) {
                 if (r.getRequest().getRequestID() == request.getRequest().getRequestID()) {
+                    currentState = SchedulerState.UPDATINGINFO;
                     //Set finished time
                     r.complete();
                     //Add it to the list of complete requests
@@ -113,6 +126,7 @@ public class SchedulerSubsystem implements Runnable {
             Add it to the list of outstanding requests
             Add it to the pending list of requests
              */
+            currentState = SchedulerState.UPDATINGINFO;
             request.setElevator(null);
             outstandingRequestList.add(request);
             pendingRequestList.add(request);
@@ -216,6 +230,8 @@ public class SchedulerSubsystem implements Runnable {
         }
 
         try {
+            currentState = SchedulerState.SENDING;
+
             requestSocket.connect(bestElevator.getIpAddress(), bestElevator.getSocketNumber());
             String message = r.getRequest().convertToPacketMessage();
             DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
