@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.nio.charset.StandardCharsets;
 
 public class ElevatorInfo {
     private final int floor;
@@ -36,12 +37,19 @@ public class ElevatorInfo {
 
     public DatagramPacket convertToPacket() {
         //Jake code this to convert this object to a packet
-        return null;
+        String message = String.valueOf(this.floor) + "," + String.valueOf(this.numberOfPassengers) + "," + String.valueOf(this.upwards) + "," + String.valueOf(this.broken);
+        return new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
     }
 
     public static ElevatorInfo parsePacket(DatagramPacket packet) {
         //Jake code this to convert a packet (created by convertToPacket) to this object.
-        return null;
+        byte[] b = packet.getData();
+        String m = new String(b);
+        String[] pm = m.split(",");// message format will be requestID,startingFloor,destinationFloor,f
+        ElevatorInfo info = new ElevatorInfo(Integer.valueOf(pm[0]),Integer.valueOf(pm[1]), Integer.valueOf(pm[2]) != 0, Integer.valueOf(pm[2]) != 0);
+        //char temp = pm[3].charAt(0); // Separate "finished" indicator bit
+
+        return info;
     }
 
 }
