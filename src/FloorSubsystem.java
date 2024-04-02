@@ -17,6 +17,7 @@ public class FloorSubsystem implements Runnable {
     private final DatagramSocket floorSocket;
     private final int schedulerPort;
     private final InetAddress shedIpAddress;
+    private final LocalTime startTime;
     private enum state {
         READING,
         CHECKING_CURRENT_REQUEST,
@@ -26,6 +27,7 @@ public class FloorSubsystem implements Runnable {
 
     FloorSubsystem(int floorPort, int schedPort, int numberOfFloors, InetAddress shedIpAddress) throws SocketException {
         this.shedIpAddress = shedIpAddress;
+        this.startTime = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         floorSocket = new DatagramSocket(floorPort);
         this.schedulerPort = schedPort;
         listOfFloors = new ArrayList<>();
@@ -87,7 +89,7 @@ public class FloorSubsystem implements Runnable {
             System.out.printf("Floor Subsystem Current State: %s\n", currentState);
         }
         for (TimedRequest r : requests) {
-            if (r.getTime().truncatedTo(ChronoUnit.MINUTES).compareTo(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)) == 0) {
+            if (r.getTime().isAfter(startTime) && r.getTime().isBefore(LocalTime.now())) {
                 requests.remove(r);
                 Request reqToSend = r.getRequest();
                 return reqToSend;
