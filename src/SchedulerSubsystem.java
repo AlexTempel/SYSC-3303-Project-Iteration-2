@@ -272,6 +272,7 @@ public class SchedulerSubsystem implements Runnable {
      * Console output of system's current state, should look like prototype in README
      */
     public void outputConsole() {
+        //Needs body
         System.out.println("I am the console output");
     }
 
