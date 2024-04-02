@@ -34,12 +34,21 @@ public class ElevatorInfo {
         return broken;
     }
 
+    /**
+     * Returns a datagram packet with a message consisting of its object parameters
+     * @return a new datagram packet with message specified from its parameters
+     */
     public DatagramPacket convertToPacket() {
         //Jake code this to convert this object to a packet
         String message = String.valueOf(this.floor) + "," + String.valueOf(this.numberOfPassengers) + "," + String.valueOf(this.upwards) + "," + String.valueOf(this.broken);
         return new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
     }
 
+    /**
+     * Returns an ElevatorInfo object with the specified parameters
+     * @param packet the datagram packet that will be parsed
+     * @return a new elevator info object with parameters
+     */
     public static ElevatorInfo parsePacket(DatagramPacket packet) {
         //Jake code this to convert a packet (created by convertToPacket) to this object.
         byte[] b = packet.getData();
