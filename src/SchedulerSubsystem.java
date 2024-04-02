@@ -175,10 +175,10 @@ public class SchedulerSubsystem implements Runnable {
         Closest
          */
 
-        //If the elevator isn't full
+        //If the elevator isn't full and not broken
         ArrayList<ElevatorSchedulerData> notFullElevators = new ArrayList<>();
         for (ElevatorSchedulerData e : elevatorList) {
-            if (e.isEmpty()) {
+            if (e.isEmpty() && !e.isBroken()) {
                 notFullElevators.add(e);
             }
         }
