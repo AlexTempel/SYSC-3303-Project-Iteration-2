@@ -1,29 +1,32 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class ElevatorSubsystem implements Runnable {
     private final int elevator_id;
     private final ElevatorDoors doors;
     private final DatagramSocket socket;
+    private int ElevatorInfoSocketID;
     private int current_floor;
     private InetAddress schedulerAddress = null;
     private int schedulerPort = -1;
     private ElevatorState state;
+    private int numPeople = 0;
+    private ArrayList<Request> reqList;
+    private boolean upwards;
 
     /**
      * Contruct the ElevatorSubsystem Object
      * @param id integer identifier of the elevator, also the recieve port
      */
-    public ElevatorSubsystem(int id) throws SocketException {
+    public ElevatorSubsystem(int id, int elevatorInfoPort) throws SocketException {
         this.elevator_id = id;
         this.doors = new ElevatorDoors();
         this.socket = new DatagramSocket(id);
         this.current_floor = 1; //start the Elevator at the ground floor
         this.state = ElevatorState.WAITING;
+        this.ElevatorInfoSocketID = elevatorInfoPort;
 
     }
 
@@ -87,13 +90,28 @@ public class ElevatorSubsystem implements Runnable {
      */
     public void moveElevator(int destination) {
         // Check how many floors elevator needs to travel
-        int floorDifference = Math.abs(current_floor - destination);
+        int floorDifference = current_floor - destination;
+        if (floorDifference > 0){
+            upwards = false;
+        }else{
+            upwards = true;
+        }
+
+        floorDifference = Math.abs(floorDifference);
 
         // Print state
         state = ElevatorState.MOVING;
         System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
 
         for (int i = floorDifference; i > 0; i--) {
+
+            //create new request
+
+            ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, false);
+            DatagramPacket infoPacket = info.convertToPacket();
+
+
+
             if (Math.random() <= 0.01) {
                 state = ElevatorState.BROKEN;
                 System.out.printf("Elevator %d is broken\n", elevator_id);
@@ -136,6 +154,25 @@ public class ElevatorSubsystem implements Runnable {
 
         // Mark complete
         currentReq.complete();
+    }
+
+    private void getMoreRequest() throws IOException {
+
+        DatagramPacket intermediateReq = new DatagramPacket(new byte[1024], 1024);
+        socket.connect(schedulerAddress, ElevatorInfoSocketID);
+        socket.setSoTimeout(10);
+
+        try {
+            socket.receive(intermediateReq);
+
+        } catch (SocketTimeoutException e) {
+            return;
+        }
+
+        Request myRequest = Request.parsePacket(intermediateReq);
+
+        reqList.add(myRequest);
+
     }
 
     private void cycleDoors() throws InterruptedException {
