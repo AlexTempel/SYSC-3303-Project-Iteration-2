@@ -105,8 +105,7 @@ public class ElevatorSubsystem implements Runnable {
 
         for (int i = floorDifference; i > 0; i--) {
 
-            //create new request
-
+            //create new info packet
             ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, false);
             DatagramPacket infoPacket = info.convertToPacket();
 
@@ -144,6 +143,8 @@ public class ElevatorSubsystem implements Runnable {
         // Open Close Elevator Doors
         cycleDoors();
 
+        numPeople += 1;
+
         // Move to destination floor
         moveElevator(endingFloor);
         if (state == ElevatorState.BROKEN) {
@@ -156,12 +157,17 @@ public class ElevatorSubsystem implements Runnable {
         currentReq.complete();
     }
 
+    /**
+     * Check for a request while servicing a different request
+     * @throws IOException
+     */
     private void getMoreRequest() throws IOException {
 
         DatagramPacket intermediateReq = new DatagramPacket(new byte[1024], 1024);
         socket.connect(schedulerAddress, ElevatorInfoSocketID);
         socket.setSoTimeout(10);
 
+        //receive all the pending requests
         try {
             socket.receive(intermediateReq);
 
