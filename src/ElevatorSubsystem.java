@@ -20,13 +20,13 @@ public class ElevatorSubsystem implements Runnable {
      * Contruct the ElevatorSubsystem Object
      * @param id integer identifier of the elevator, also the recieve port
      */
-    public ElevatorSubsystem(int id, int elevatorInfoPort) throws SocketException {
+    public ElevatorSubsystem(int id) throws SocketException {
         this.elevator_id = id;
         this.doors = new ElevatorDoors();
         this.socket = new DatagramSocket(id);
         this.current_floor = 1; //start the Elevator at the ground floor
         this.state = ElevatorState.WAITING;
-        this.ElevatorInfoSocketID = elevatorInfoPort;
+        //this.ElevatorInfoSocketID = elevatorInfoPort;
 
     }
 
