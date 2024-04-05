@@ -23,6 +23,7 @@ public class RequestWrapper { //Meant only for scheduler
         return receiveTime;
     }
 
+    public LocalDateTime getCompletetionTime() { return completetionTime; }
     public Request getRequest() {
         return request;
     }

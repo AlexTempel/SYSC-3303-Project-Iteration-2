@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 public class SchedulerSubsystem implements Runnable {
@@ -272,8 +273,34 @@ public class SchedulerSubsystem implements Runnable {
      * Console output of system's current state, should look like prototype in README
      */
     public void outputConsole() {
-        //Needs body
-        System.out.println("I am the console output");
+        System.out.printf("--------------------------------------------------------------------%n");
+        System.out.printf("| %-10s | %-15s | %-20s | %-10s |%n","Elevator","Current Floor", "Number of Passengers", "Status");
+        System.out.printf("--------------------------------------------------------------------%n");
+        for(int i = 0; i < elevatorList.size(); i++){
+            if(elevatorList.get(i).isBroken()){
+                System.out.printf("| %-10s | %-15s | %-20s | %-10s |%n",elevatorList.get(i).getSocketNumber(),
+                                                                        elevatorList.get(i).getCurrentFloor(),
+                                                                        elevatorList.get(i).getNumberOfPassengers(),
+                                                                        "Broken");
+            } else {
+                System.out.printf("| %-10s | %-15s | %-20s | %-10s |%n",elevatorList.get(i).getSocketNumber(),
+                                                                        elevatorList.get(i).getCurrentFloor(),
+                                                                        elevatorList.get(i).getNumberOfPassengers(),
+                                                                        "Normal");
+            }
+
+        }
+        long avgCompleteTime = 0;
+        for(int j = 0; j < completeRequestList.size(); j++){
+            long timeToComplete = ChronoUnit.SECONDS.between(completeRequestList.get(j).getReceiveTime(),completeRequestList.get(j).getCompletetionTime());
+            avgCompleteTime += timeToComplete;
+        }
+        avgCompleteTime = avgCompleteTime / completeRequestList.size();
+
+        System.out.printf("--------------------------------------------------------------------%n");
+        System.out.printf("| %-64s |%n","Average time to complete: "+ Long.toString(avgCompleteTime) +" seconds");
+        System.out.printf("| %-64s |%n","Number of requests serviced: "+ Integer.toString(completeRequestList.size()));
+        System.out.printf("--------------------------------------------------------------------%n");
     }
 
     @Override
