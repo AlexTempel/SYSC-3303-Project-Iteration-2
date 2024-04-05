@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class ElevatorSubsystemV2 implements Runnable {
@@ -49,10 +50,7 @@ public class ElevatorSubsystemV2 implements Runnable {
                 getRequests();
                 pickRequest(allReqList);
                 moveElevator();
-//                Request myRequest = getRequestData();
-//                handleRequest(myRequest);
-//                // Send completed request back to scheduler
-//                sendConfirmation(myRequest);
+                updateScheduler();
             }catch(Exception e){
                 throw new RuntimeException(e);
             }
@@ -149,14 +147,46 @@ public class ElevatorSubsystemV2 implements Runnable {
         }
     }
 
-    public void moveElevator(){
+    /**
+     * Move the Elevator one floor and see if anyone is getting off/on
+     */
+    public void moveElevator() throws InterruptedException, IOException {
 
-        //Cont
-        if (allReqList.isEmpty()){
-            return;
+        // See if anyone is getting on or off
+        int numUnloading = 0;
+        int numLoading = 0;
+        int index = 0;
+        for (Request request : currReqList) {
+            if (current_floor == request.getStartingFloor()) {
+                numLoading  += 1;
+            } else if (current_floor == request.getDestinationFloor()){
+                numUnloading += 1;
+
+                // Remove the finished request
+                currReqList.get(index).complete();
+                sendConfirmation(currReqList.get(index));
+
+                // Take out of current req list
+                currReqList.remove(index);
+            }
+            index += 1;
+        }
+
+        // Let them on or off
+        if (numLoading != 0 || numUnloading != 0){
+            cycleDoors();
+            numPeople = numPeople + numLoading - numUnloading;
+        }
+
+        // Move if we have direction and request
+        if(upwards && !currReqList.isEmpty()){
+            current_floor += 1;
+        }else if (!upwards && !currReqList.isEmpty()){
+            current_floor -= 1;
         }
 
     }
+
 
     public ArrayList<Request> getCurrReqList(){
 
@@ -167,6 +197,47 @@ public class ElevatorSubsystemV2 implements Runnable {
 
         upwards = true;
     }
+
+    /**
+     * Simulate opening and closing the doors
+     * @throws InterruptedException
+     */
+    private void cycleDoors() throws InterruptedException {
+        state = ElevatorSubsystemV2.ElevatorState.DOORS_OPEN;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+        doors.toggleDoors();
+
+        state = ElevatorSubsystemV2.ElevatorState.LOADING;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+        Thread.sleep(2000);
+
+        doors.toggleDoors();
+        state = ElevatorSubsystemV2.ElevatorState.DOORS_CLOSE;
+        System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+    }
+
+    /**
+     * Converts Request to string, sends packet to Scheduelr
+     * @param confirmation Request with the completed attribute true
+     * @throws IOException
+     */
+    public void sendConfirmation(Request confirmation) throws IOException {
+        String message = confirmation.convertToPacketMessage();
+        DatagramPacket sendPacket = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.getBytes().length);
+        socket.connect(schedulerAddress, schedulerPort);
+        socket.send(sendPacket);
+        socket.disconnect();
+
+        System.out.println("Elevator sent complete request");
+    }
+
+    // TODO add updating packet logic
+    public void updateScheduler(){
+        //create new info packet
+        ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, false);
+        DatagramPacket infoPacket = info.convertToPacket();
+    }
+
     public enum ElevatorState {
 
         WAITING,

@@ -16,9 +16,9 @@ class ElevatorSubsystemV2Test {
         System.out.println("starting");
         ElevatorSubsystemV2 e = new ElevatorSubsystemV2(1, 5);
         System.out.println("Defining");
-        Request r1 = new Request(1, 2, 10);
+        Request r1 = new Request(1, 4, 10);
         Request r2 = new Request(2, 3, 10);
-        Request r3 = new Request(3, 4, 10);
+        Request r3 = new Request(3, 2, 10);
         Request r4 = new Request(4, 5, 10);
         Request r5 = new Request(5, 7, 10);
         Request r6 = new Request(6, 6, 10);
