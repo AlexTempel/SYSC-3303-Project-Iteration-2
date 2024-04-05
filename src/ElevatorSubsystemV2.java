@@ -15,7 +15,7 @@ public class ElevatorSubsystemV2 implements Runnable {
     private int numPeople = 0;
     private ArrayList<Request> allReqList = new ArrayList<Request>();
     private Boolean upwards = null;
-    private Request currentRequest = null;
+    //private Request currentRequest = null;
     private ArrayList<Request> currReqList = new ArrayList<Request>();
 
     /**
@@ -50,7 +50,7 @@ public class ElevatorSubsystemV2 implements Runnable {
                 getRequests();
                 pickRequest(allReqList);
                 moveElevator();
-                updateScheduler();
+                updateScheduler(false);
             }catch(Exception e){
                 throw new RuntimeException(e);
             }
@@ -81,6 +81,7 @@ public class ElevatorSubsystemV2 implements Runnable {
         // Add request to list
         System.out.println("Elevator received request from scheduler");
         allReqList.add(Request.parsePacket(receivePacket));
+        getRequests();
     }
 
     /**
@@ -151,6 +152,16 @@ public class ElevatorSubsystemV2 implements Runnable {
      */
     public void moveElevator() throws InterruptedException, IOException {
 
+        // Chance to permanently Break
+        int breakChance = (int) (Math.random() * 400);
+        if (breakChance == 144){
+            state = ElevatorSubsystemV2.ElevatorState.BROKEN;
+            System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
+            updateScheduler(false);
+            throw new InterruptedException("Elevator is broken");
+
+        }
+
         // See if anyone is getting on or off
         int numUnloading = 0;
         int numLoading = 0;
@@ -195,12 +206,26 @@ public class ElevatorSubsystemV2 implements Runnable {
 
     }
 
-
+    /**
+     * For testing
+     * @return
+     */
     public ArrayList<Request> getCurrReqList(){
 
         return currReqList;
     }
 
+    /**
+     * For testing
+     * @return
+     */
+    public ArrayList<Request> getAllReqList(){
+        return allReqList;
+    }
+
+    /**
+     * For Testing
+     */
     public void setUpwards(){
 
         upwards = true;
@@ -210,16 +235,41 @@ public class ElevatorSubsystemV2 implements Runnable {
      * Simulate opening and closing the doors
      * @throws InterruptedException
      */
-    private void cycleDoors() throws InterruptedException {
+    private void cycleDoors() throws InterruptedException, IOException {
+        boolean isJammed;
         state = ElevatorSubsystemV2.ElevatorState.DOORS_OPEN;
         System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
-        doors.toggleDoors();
+        isJammed = doors.toggleDoors();
+
+        while(isJammed){
+            System.out.printf("Elevator doors are jammed! Wait for repair...\n");
+
+            // Tell Scheduler elevator is broken
+            updateScheduler(true);
+            Thread.sleep(10000);
+
+            // Try again to open doors
+            doors.toggleDoors();
+        }
+
+        updateScheduler(false);
 
         state = ElevatorSubsystemV2.ElevatorState.LOADING;
         System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
         Thread.sleep(2000);
 
-        doors.toggleDoors();
+        isJammed = doors.toggleDoors();
+        while(isJammed){
+            System.out.printf("Elevator doors are jammed! Wait for repair...\n");
+
+            // Tell Scheduler elevator is broken
+            updateScheduler(true);
+            Thread.sleep(10000);
+
+            // Try again to open doors
+            doors.toggleDoors();
+        }
+
         state = ElevatorSubsystemV2.ElevatorState.DOORS_CLOSE;
         System.out.printf("Elevator %d Current State: %s\n",elevator_id, state);
     }
@@ -239,17 +289,30 @@ public class ElevatorSubsystemV2 implements Runnable {
         System.out.println("Elevator sent complete request");
     }
 
-    // TODO add updating packet logic
-    public void updateScheduler(){
+    /**
+     * Send the info packet to the scheduler after every floor
+     * @throws IOException
+     */
+    public void updateScheduler(boolean broken) throws IOException {
         //create new info packet
-        ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, false);
+        ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, broken);
         DatagramPacket infoPacket = info.convertToPacket();
+        socket.connect(schedulerAddress, ElevatorInfoSocketID);
+        socket.send(infoPacket);
+        socket.disconnect();
     }
 
+    /**
+     * Socket Cleanup
+     */
     public void closeSocket(){
         socket.close();
     }
 
+    /**
+     * For Testing - set an address and port for scheduler
+     * @throws UnknownHostException
+     */
     public void setSchedulerAddress() throws UnknownHostException {
         schedulerAddress = InetAddress.getByName("localhost");
         schedulerPort = 156;

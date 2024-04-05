@@ -25,17 +25,14 @@ public class ElevatorDoors {
     /**
      * Toggle the open or close action of the doors
      */
-    public void toggleDoors(){
+    public boolean toggleDoors(){
+
+        isJammed = false;
 
         int jamChance = (int) (Math.random() * 10);
         if (jamChance == 5) {
             isJammed = true;
-        }
-
-        if (isJammed){
-            System.out.println("The Elevator doors are jammed!");
-            System.out.println("Sending another open signal...");
-            isJammed = false; // Reset the jammed state
+            return isJammed;
         }
 
         String action;
@@ -52,5 +49,7 @@ public class ElevatorDoors {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) { }
+
+        return isJammed;
     }
 }
