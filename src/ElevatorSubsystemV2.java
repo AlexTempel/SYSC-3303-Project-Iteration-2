@@ -79,7 +79,6 @@ public class ElevatorSubsystemV2 implements Runnable {
         }
 
         // Add request to list
-        Request myRequest = Request.parsePacket(receivePacket);
         System.out.println("Elevator received request from scheduler");
         allReqList.add(Request.parsePacket(receivePacket));
     }
@@ -94,7 +93,7 @@ public class ElevatorSubsystemV2 implements Runnable {
             // Loop through all requests to see the appropriate one to service
             while (currReqList.size() < 5) {
 
-                System.out.println("This is the size of currReqList: " + currReqList.size());
+                //System.out.println("This is the size of currReqList: " + currReqList.size());
                 Request tempReq = null;
                 int removeIndex = -1;
 
@@ -140,7 +139,7 @@ public class ElevatorSubsystemV2 implements Runnable {
                 }
                 currReqList.add(tempReq);
                 if (removeIndex != -1){
-                    System.out.println("Removing index: " + removeIndex);
+                    //System.out.println("Removing index: " + removeIndex);
                     reqList.remove(removeIndex);
                 }
             }
@@ -156,6 +155,7 @@ public class ElevatorSubsystemV2 implements Runnable {
         int numUnloading = 0;
         int numLoading = 0;
         int index = 0;
+        ArrayList<Integer> removalIndicies = new ArrayList<>();
         for (Request request : currReqList) {
             if (current_floor == request.getStartingFloor()) {
                 numLoading  += 1;
@@ -167,13 +167,21 @@ public class ElevatorSubsystemV2 implements Runnable {
                 sendConfirmation(currReqList.get(index));
 
                 // Take out of current req list
-                currReqList.remove(index);
+                removalIndicies.add(index);
+
             }
             index += 1;
         }
 
+        // Remove the completed trips
+        for(int k: removalIndicies){
+            currReqList.remove(k);
+        }
+
+        System.out.println("Letting " + numLoading + " People on and " + numUnloading + " People off.");
         // Let them on or off
         if (numLoading != 0 || numUnloading != 0){
+
             cycleDoors();
             numPeople = numPeople + numLoading - numUnloading;
         }
@@ -236,6 +244,15 @@ public class ElevatorSubsystemV2 implements Runnable {
         //create new info packet
         ElevatorInfo info = new ElevatorInfo(current_floor, numPeople, upwards, false);
         DatagramPacket infoPacket = info.convertToPacket();
+    }
+
+    public void closeSocket(){
+        socket.close();
+    }
+
+    public void setSchedulerAddress() throws UnknownHostException {
+        schedulerAddress = InetAddress.getByName("localhost");
+        schedulerPort = 156;
     }
 
     public enum ElevatorState {
