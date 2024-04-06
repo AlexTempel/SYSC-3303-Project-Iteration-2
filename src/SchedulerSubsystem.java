@@ -295,7 +295,11 @@ public class SchedulerSubsystem implements Runnable {
             long timeToComplete = ChronoUnit.SECONDS.between(completeRequestList.get(j).getReceiveTime(),completeRequestList.get(j).getCompletetionTime());
             avgCompleteTime += timeToComplete;
         }
-        avgCompleteTime = avgCompleteTime / completeRequestList.size();
+        if (completeRequestList.size() != 0) {
+            avgCompleteTime = avgCompleteTime / completeRequestList.size();
+        } else {
+            avgCompleteTime = 0;
+        }
 
         System.out.printf("--------------------------------------------------------------------%n");
         System.out.printf("| %-64s |%n","Average time to complete: "+ Long.toString(avgCompleteTime) +" seconds");
